@@ -5,10 +5,10 @@ CS 3550
 11/1/18
 */
 
---You need to create stored procedures to complete the following items:
+-----------------BEGIN STORED PROCEDURES-----------------
 --Create new asset types
 CREATE OR ALTER PROCEDURE NewAssetType
-	@newType varchar(50)
+	@assetType varchar(50)
 AS
 BEGIN
 	INSERT INTO LibraryProject.AssetTypes
@@ -16,7 +16,28 @@ BEGIN
 		AssetType
 	)
 	VALUES
-		(@newType);
+		(@assetType);
 END;
 
---Create, update, or deactivate assets
+--Create assets
+CREATE OR ALTER PROCEDURE CreateAsset
+	@asset varchar(100),
+	@assetDescription varchar(max),
+	@assetTypeKey int,
+	@replacementCost money,
+	@restricted bit
+AS
+BEGIN
+	INSERT INTO LibraryProject.Assets
+	(
+		Asset,
+		AssetDescription,
+		AssetTypeKey,
+		ReplacementCost,
+		Restricted
+	)
+	VALUES
+		(@asset, @assetDescription, @assetTypeKey, @replacementCost, @restricted);
+END;
+
+------------------END STORED PROCEDURES------------------
