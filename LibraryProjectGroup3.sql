@@ -42,14 +42,15 @@ END;
 
 --Deactivate asset
 CREATE OR ALTER PRCOEDURE DeactivateAsset
+	@assetKey
 	@deactivatedOn datetime
 AS
 BEGIN
-	INSERT INTO LibraryProject.Assets
-	(
-		DeactivatedOn
-	)
-	VALUES
-		(@deactivatedOn);
+	UPDATE LibraryProject.Assets
+	SET
+		DeactivatedOn = @deactivatedOn
+	WHERE
+		LibraryProject.Assets.AssetKey = @assetKey
+		
 END;
 ------------------END STORED PROCEDURES------------------
