@@ -121,7 +121,7 @@ END;
 
 --Deactivate asset
 CREATE OR ALTER PRCOEDURE DeactivateAsset
-	@assetKey int
+	@assetKey int,
 	@deactivatedOn datetime
 AS
 BEGIN
