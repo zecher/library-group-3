@@ -40,4 +40,16 @@ BEGIN
 		(@asset, @assetDescription, @assetTypeKey, @replacementCost, @restricted);
 END;
 
+--Deactivate asset
+CREATE OR ALTER PRCOEDURE DeactivateAsset
+	@deactivatedOn datetime
+AS
+BEGIN
+	INSERT INTO LibraryProject.Assets
+	(
+		DeactivatedOn
+	)
+	VALUES
+		(@deactivatedOn);
+END;
 ------------------END STORED PROCEDURES------------------
