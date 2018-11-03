@@ -34,10 +34,10 @@ END;
 
 --Update asset
 CREATE OR ALTER PROCEDURE UpdateAsset
-	@assetKey int,
+	@assetTag uniqueidentifier,
+	@newAssetTag uniqueidentifier = NULL,
 	@asset varchar(100) = NULL,
 	@assetDescription varchar(max) = NULL,
-	@assetTag uniqueidentifier = NULL,
 	@assetTypeKey int = NULL,
 	@replacementCost money = NULL,
 	@restricted bit = NULL,
@@ -45,13 +45,21 @@ CREATE OR ALTER PROCEDURE UpdateAsset
 	@deactivatedOn datetime = NULL
 AS
 BEGIN
+	IF (@newAssetTag IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Assets
+			SET
+				AssetTag = @newAssetTag
+			WHERE
+				LibraryProject.Assets.AssetTag = @newAssetTag
+		END
 	IF (@asset IS NOT NULL)
 		BEGIN
 			UPDATE LibraryProject.Assets
 			SET
 				Asset = @asset
 			WHERE
-				LibraryProject.Assets.AssetKey = @assetKey
+				LibraryProject.Assets.AssetTag = @assetTag
 		END
 	IF (@assetDescription IS NOT NULL)
 		BEGIN
@@ -59,15 +67,7 @@ BEGIN
 			SET
 				AssetDescription = @assetDescription
 			WHERE
-				LibraryProject.Assets.AssetKey = @assetKey
-		END
-	IF (@assetTag IS NOT NULL)
-		BEGIN
-			UPDATE LibraryProject.Assets
-			SET
-				AssetTag = @assetTag
-			WHERE
-				LibraryProject.Assets.AssetKey = @assetKey
+				LibraryProject.Assets.AssetTag = @assetTag
 		END
 	IF (@assetTypeKey IS NOT NULL)
 		BEGIN
@@ -75,7 +75,7 @@ BEGIN
 			SET
 				AssetTypeKey = @assetTypeKey
 			WHERE
-				LibraryProject.Assets.AssetKey = @assetKey
+				LibraryProject.Assets.AssetTag = @assetTag
 		END
 	IF (@replacementCost IS NOT NULL)
 		BEGIN
@@ -83,7 +83,7 @@ BEGIN
 			SET
 				ReplacementCost = @replacementCost
 			WHERE
-				LibraryProject.Assets.AssetKey = @assetKey
+				LibraryProject.Assets.AssetTag = @assetTag
 		END
 	IF (@restricted IS NOT NULL)
 		BEGIN
@@ -91,7 +91,7 @@ BEGIN
 			SET
 				Restricted = @restricted
 			WHERE
-				LibraryProject.Assets.AssetKey = @assetKey
+				LibraryProject.Assets.AssetTag = @assetTag
 		END
 	IF (@createdOn IS NOT NULL)
 		BEGIN
@@ -99,7 +99,7 @@ BEGIN
 			SET
 				CreatedOn = @createdOn
 			WHERE
-				LibraryProject.Assets.AssetKey = @assetKey
+				LibraryProject.Assets.AssetTag = @assetTag
 		END
 	IF (@deactivatedOn IS NOT NULL)
 		BEGIN
@@ -107,7 +107,7 @@ BEGIN
 			SET
 				DeactivatedOn = @deactivatedOn
 			WHERE
-				LibraryProject.Assets.AssetKey = @assetKey
+				LibraryProject.Assets.AssetTag = @assetTag
 		END
 END;
 
@@ -124,11 +124,12 @@ BEGIN
 		LibraryProject.Assets.AssetKey = @assetKey
 		
 END;
+
 ------------------END STORED PROCEDURES------------------
 
 
 ---------------------BEGIN TRIGGERS----------------------
---Create a trigger that verifies that the limit rules on the number of checkouts is adhered to
+--Verify that the limit rules on the number of checkouts is adhered to
 CREATE OR ALTER TRIGGER LibraryProject.CheckoutNumberLimit
 ON LibraryProject.AssetLoans
 INSTEAD OF INSERT
