@@ -35,24 +35,16 @@ END;
 --Update asset
 CREATE OR ALTER PROCEDURE UpdateAsset
 	@assetTag uniqueidentifier,
-	@newAssetTag uniqueidentifier = NULL,
 	@asset varchar(100) = NULL,
 	@assetDescription varchar(max) = NULL,
 	@assetTypeKey int = NULL,
 	@replacementCost money = NULL,
 	@restricted bit = NULL,
 	@createdOn datetime = NULL,
-	@deactivatedOn datetime = NULL
+	@deactivatedOn datetime = NULL,
+	@newAssetTag uniqueidentifier = NULL
 AS
 BEGIN
-	IF (@newAssetTag IS NOT NULL)
-		BEGIN
-			UPDATE LibraryProject.Assets
-			SET
-				AssetTag = @newAssetTag
-			WHERE
-				LibraryProject.Assets.AssetTag = @newAssetTag
-		END
 	IF (@asset IS NOT NULL)
 		BEGIN
 			UPDATE LibraryProject.Assets
@@ -109,6 +101,14 @@ BEGIN
 			WHERE
 				LibraryProject.Assets.AssetTag = @assetTag
 		END
+	IF (@newAssetTag IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Assets
+			SET
+				AssetTag = @newAssetTag
+			WHERE
+				LibraryProject.Assets.AssetTag = @newAssetTag
+		END
 END;
 
 --Deactivate asset
@@ -124,7 +124,6 @@ BEGIN
 		LibraryProject.Assets.AssetKey = @assetKey
 		
 END;
-
 ------------------END STORED PROCEDURES------------------
 
 
