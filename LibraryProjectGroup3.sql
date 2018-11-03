@@ -12,9 +12,7 @@ CREATE OR ALTER PROCEDURE NewAssetType
 AS
 BEGIN
 	INSERT INTO LibraryProject.AssetTypes
-	(
-		AssetType
-	)
+		(AssetType)
 	VALUES
 		(@assetType);
 END;
@@ -29,13 +27,7 @@ CREATE OR ALTER PROCEDURE CreateAsset
 AS
 BEGIN
 	INSERT INTO LibraryProject.Assets
-	(
-		Asset,
-		AssetDescription,
-		AssetTypeKey,
-		ReplacementCost,
-		Restricted
-	)
+		(Asset, AssetDescription, AssetTypeKey, ReplacementCost, Restricted)
 	VALUES
 		(@asset, @assetDescription, @assetTypeKey, @replacementCost, @restricted);
 END;
@@ -136,5 +128,125 @@ END;
 
 
 ---------------------BEGIN TRIGGERS----------------------
+--Create a trigger that verifies that the limit rules on the number of checkouts is adhered to
+CREATE OR ALTER TRIGGER LibraryProject.CheckoutNumberLimit
+ON LibraryProject.AssetLoans
+INSTEAD OF INSERT
+AS
+BEGIN
+	DECLARE @AssetKey int;
+	DECLARE @UserKey int;
+	DECLARE @LoanedOn date;
+	DECLARE @ReturnedOn date;
+	DECLARE @LostOn date;
+	DECLARE @CardType varchar(50);
+
+	SELECT @AssetKey = I.AssetKey FROM inserted I;
+	SELECT @UserKey = I.UserKey FROM inserted I;
+	SELECT @LoanedOn = I.LoanedOn FROM inserted I;
+	SELECT @ReturnedOn = I.ReturnedOn FROM inserted I;
+	SELECT @LostOn = I.LostOn FROM inserted I;
+
+	SELECT 
+		@CardType = CT.CardType
+	FROM
+		LibraryProject.Cards AS C
+		LEFT JOIN LibraryProject.CardTypes AS CT ON CT.CardTypeKey = C.CardTypeKey
+	WHERE
+		C.UserKey = @UserKey
+
+	IF @CardType = 'Adult'
+	BEGIN
+		IF
+		(
+			SELECT
+				sub.CheckoutCount
+			FROM
+			(
+				SELECT
+					AL.UserKey,
+					COUNT(AL.AssetLoanKey) AS CheckoutCount
+				FROM 
+					LibraryProject.AssetLoans AS AL
+				GROUP BY
+					AL.UserKey
+			) AS [sub]
+			WHERE
+				sub.UserKey = @UserKey
+		) < 6 --Checkout limit for Adult CardTypes
+		BEGIN
+			INSERT INTO LibraryProject.AssetLoans
+				(AssetKey, UserKey, LoanedOn, ReturnedOn, LostOn)
+			VALUES
+				(@AssetKey, @UserKey, @LoanedOn, @ReturnedOn, @LostOn)
+		END
+		ELSE
+		BEGIN
+			RAISERROR ('ERROR: Adult card has already reached checkout limit of 6.', 8, 1)
+		END
+	END
+
+	IF @CardType = 'Teen'
+	BEGIN
+		IF
+		(
+			SELECT
+				sub.CheckoutCount
+			FROM
+			(
+				SELECT
+					AL.UserKey,
+					COUNT(AL.AssetLoanKey) AS CheckoutCount
+				FROM 
+					LibraryProject.AssetLoans AS AL
+				GROUP BY
+					AL.UserKey
+			) AS [sub]
+			WHERE
+				sub.UserKey = @UserKey
+		) < 4 --Checkout limit for Teen CardTypes
+		BEGIN
+			INSERT INTO LibraryProject.AssetLoans
+				(AssetKey, UserKey, LoanedOn, ReturnedOn, LostOn)
+			VALUES
+				(@AssetKey, @UserKey, @LoanedOn, @ReturnedOn, @LostOn)
+		END
+		ELSE
+		BEGIN
+			RAISERROR ('ERROR: Teen card has already reached checkout limit of 4.', 8, 1)
+		END
+	END
+
+	IF @CardType = 'Child'
+	BEGIN
+		IF
+		(
+			SELECT
+				sub.CheckoutCount
+			FROM
+			(
+				SELECT
+					AL.UserKey,
+					COUNT(AL.AssetLoanKey) AS CheckoutCount
+				FROM 
+					LibraryProject.AssetLoans AS AL
+				GROUP BY
+					AL.UserKey
+			) AS [sub]
+			WHERE
+				sub.UserKey = @UserKey
+		) < 2 --Checkout limit for Child CardTypes
+		BEGIN
+			INSERT INTO LibraryProject.AssetLoans
+				(AssetKey, UserKey, LoanedOn, ReturnedOn, LostOn)
+			VALUES
+				(@AssetKey, @UserKey, @LoanedOn, @ReturnedOn, @LostOn)
+		END
+		ELSE
+		BEGIN
+			RAISERROR ('ERROR: Child card has already reached checkout limit of 2.', 8, 1)
+		END
+	END
+END
 
 ----------------------END TRIGGERS-----------------------
