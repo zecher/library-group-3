@@ -50,7 +50,7 @@ CREATE OR ALTER PROCEDURE UpdateAsset
 	@replacementCost money = NULL,
 	@restricted bit = NULL,
 	@createdOn datetime = NULL,
-	@deactivatedOn datetime = NULL,
+	@deactivatedOn datetime = NULL
 AS
 BEGIN
 	IF (@asset IS NOT NULL)
@@ -120,7 +120,7 @@ BEGIN
 END;
 
 --Deactivate asset
-CREATE OR ALTER PRCOEDURE DeactivateAsset
+CREATE OR ALTER PROCEDURE DeactivateAsset
 	@assetKey int,
 	@deactivatedOn datetime
 AS
@@ -133,3 +133,8 @@ BEGIN
 		
 END;
 ------------------END STORED PROCEDURES------------------
+
+
+---------------------BEGIN TRIGGERS----------------------
+
+----------------------END TRIGGERS-----------------------
