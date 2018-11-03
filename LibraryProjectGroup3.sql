@@ -113,7 +113,7 @@ END;
 
 --Deactivate asset
 CREATE OR ALTER PROCEDURE DeactivateAsset
-	@assetKey int,
+	@assetTag uniqueidentifier,
 	@deactivatedOn datetime
 AS
 BEGIN
@@ -121,9 +121,11 @@ BEGIN
 	SET
 		DeactivatedOn = @deactivatedOn
 	WHERE
-		LibraryProject.Assets.AssetKey = @assetKey
+		LibraryProject.Assets.AssetTag = @assetTag
 		
 END;
+
+SELECT * FROM LibraryProject.Assets
 ------------------END STORED PROCEDURES------------------
 
 
