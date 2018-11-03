@@ -172,7 +172,7 @@ ADD CONSTRAINT fk_AssetLoaned FOREIGN KEY (AssetKey)
 
 
 /*
-
+DROP TABLE LibraryProject.Fees
 DROP TABLE LibraryProject.AssetLoans
 DROP TABLE LibraryProject.Assets
 DROP TABLE LibraryProject.AssetTypes
