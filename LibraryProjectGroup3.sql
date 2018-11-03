@@ -122,10 +122,8 @@ BEGIN
 		DeactivatedOn = @deactivatedOn
 	WHERE
 		LibraryProject.Assets.AssetTag = @assetTag
-		
 END;
 
-SELECT * FROM LibraryProject.Assets
 ------------------END STORED PROCEDURES------------------
 
 
