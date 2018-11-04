@@ -114,7 +114,7 @@ END;
 
 --Deactivate asset
 CREATE OR ALTER PROCEDURE DeactivateAsset
-	@assetTag uniqueidentifier,
+	@assetKey int,
 	@deactivatedOn datetime
 AS
 BEGIN
@@ -122,7 +122,7 @@ BEGIN
 	SET
 		DeactivatedOn = @deactivatedOn
 	WHERE
-		LibraryProject.Assets.AssetTag = @assetTag
+		LibraryProject.Assets.AssetKey = @assetKey
 END;
 
 --Pay fees (one at a time)
