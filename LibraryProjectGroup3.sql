@@ -166,7 +166,12 @@ BEGIN
 		LEFT JOIN LibraryProject.CardTypes AS CT ON CT.CardTypeKey = C.CardTypeKey
 	WHERE
 		C.UserKey = @UserKey
---- maybe add a check before this to see if user has fines
+/*
+ maybe add a check before this to see if user has fines
+ would need another join, maybe? maybe no?
+ If.. sum up where user ke found in fees table where not having paid fees
+ then do check out as below else raise error 'User has outstanding fines'
+ */
 
 	IF @CardType = 'Adult'
 	BEGIN
