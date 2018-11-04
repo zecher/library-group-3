@@ -270,3 +270,12 @@ DECLARE @myFee decimal
 --this isn't working
 EXEC GetFine @CheckOut = '1980-05-24', @CheckIn = '1980-06-24', @fee = @myFee OUTPUT
 SELECT @myFee
+
+create or ALTER PROCEDURE PayFee
+	@UserKey int
+as
+	update LibraryProject.Fees 
+	set Paid = 1 
+	where UserKey = @UserKey
+
+/* TODO: check out a book return it x days late and therefore charge a new fee */
