@@ -124,6 +124,17 @@ BEGIN
 		LibraryProject.Assets.AssetTag = @assetTag
 END;
 
+--Pay fees (one at a time)
+CREATE OR ALTER PROCEDURE PayFee
+	@feeKey int
+AS
+BEGIN
+	UPDATE LibraryProject.Fees
+	SET
+		Paid = 1
+	WHERE
+		FeeKey = @feeKey
+END;
 ------------------END STORED PROCEDURES------------------
 
 
@@ -182,7 +193,7 @@ BEGIN
 		END
 		ELSE
 		BEGIN
-			RAISERROR ('ERROR: Adult card has already reached checkout limit of 6.', 8, 1)
+			RAISERROR ('ERROR: Adult card has already reached checkout limit of 6', 8, 1)
 		END
 	END
 
@@ -213,7 +224,7 @@ BEGIN
 		END
 		ELSE
 		BEGIN
-			RAISERROR ('ERROR: Teen card has already reached checkout limit of 4.', 8, 1)
+			RAISERROR ('ERROR: Teen card has already reached checkout limit of 4', 8, 1)
 		END
 	END
 
@@ -244,7 +255,7 @@ BEGIN
 		END
 		ELSE
 		BEGIN
-			RAISERROR ('ERROR: Child card has already reached checkout limit of 2.', 8, 1)
+			RAISERROR ('ERROR: Child card has already reached checkout limit of 2', 8, 1)
 		END
 	END
 END
