@@ -6,6 +6,7 @@ CS 3550
 */
 
 -----------------BEGIN STORED PROCEDURES-----------------
+
 --Create new asset types
 CREATE OR ALTER PROCEDURE NewAssetType
 	@assetType varchar(50)
@@ -16,6 +17,7 @@ BEGIN
 	VALUES
 		(@assetType);
 END;
+
 
 --Create assets
 CREATE OR ALTER PROCEDURE CreateAsset
@@ -31,6 +33,7 @@ BEGIN
 	VALUES
 		(@asset, @assetDescription, @assetTypeKey, @replacementCost, @restricted);
 END;
+
 
 --Update asset
 CREATE OR ALTER PROCEDURE UpdateAsset
@@ -112,6 +115,7 @@ BEGIN
 		END
 END;
 
+
 --Deactivate asset
 CREATE OR ALTER PROCEDURE DeactivateAsset
 	@assetKey int,
@@ -125,6 +129,7 @@ BEGIN
 		LibraryProject.Assets.AssetKey = @assetKey
 END;
 
+
 --Pay fees (one at a time)
 CREATE OR ALTER PROCEDURE PayFee
 	@feeKey int
@@ -136,12 +141,13 @@ BEGIN
 	WHERE
 		FeeKey = @feeKey
 END;
+
 ------------------END STORED PROCEDURES------------------
 
 
 ---------------------BEGIN TRIGGERS----------------------
---Verify that the limit rules on the number of checkouts is adhered to
 
+--Verify that the limit rules on the number of checkouts is adhered to
 CREATE OR ALTER TRIGGER LibraryProject.CheckoutNumberLimit
 ON LibraryProject.AssetLoans
 INSTEAD OF INSERT
@@ -154,11 +160,11 @@ BEGIN
 	DECLARE @LostOn date;
 	DECLARE @CardType varchar(50);
 
-	SELECT @AssetKey	= I.AssetKey   FROM inserted I;
-	SELECT @UserKey		= I.UserKey    FROM inserted I;
-	SELECT @LoanedOn	= I.LoanedOn   FROM inserted I;
-	SELECT @ReturnedOn	= I.ReturnedOn FROM inserted I;
-	SELECT @LostOn		= I.LostOn     FROM inserted I;
+	SELECT @AssetKey = I.AssetKey FROM inserted I;
+	SELECT @UserKey	= I.UserKey FROM inserted I;
+	SELECT @LoanedOn = I.LoanedOn FROM inserted I;
+	SELECT @ReturnedOn = I.ReturnedOn FROM inserted I;
+	SELECT @LostOn = I.LostOn FROM inserted I;
 
 	SELECT 
 		@CardType = CT.CardType
@@ -167,17 +173,6 @@ BEGIN
 		LEFT JOIN LibraryProject.CardTypes AS CT ON CT.CardTypeKey = C.CardTypeKey
 	WHERE
 		C.UserKey = @UserKey
-/* Before checking out...
-Is the item available to check out?
---> "asset cannot be checked out if it is already checked out" <--
-*/
-
-/*
- maybe add a check before this to see if user has fines
- would need another join, maybe? maybe no?
- If.. sum up where user ke found in fees table where not having paid fees
- then do check out as below else raise error 'User has outstanding fines'
- */
 
 	IF @CardType = 'Adult'
 	BEGIN
@@ -250,6 +245,47 @@ Is the item available to check out?
 END
 
 ----------------------END TRIGGERS-----------------------
+
+
+--------------------BEGIN FUNCTIONS----------------------
+
+--Create a function that provides an all-in cost for replacing an asset
+CREATE OR ALTER FUNCTION LostAssetFee(@AssetKey int)
+RETURNS money
+AS
+BEGIN
+	DECLARE @AssetType varchar(50);
+	DECLARE @FeeAmount money;
+
+	SELECT
+		@AssetType = AT.AssetType
+	FROM
+		LibraryProject.Assets A
+		LEFT JOIN LibraryProject.AssetTypes AT ON AT.AssetTypeKey = A.AssetTypeKey
+	WHERE
+		A.AssetKey = @AssetKey;
+
+	SELECT
+		@FeeAmount = A.ReplacementCost
+	FROM
+		LibraryProject.Assets A
+	WHERE
+		A.AssetKey = @AssetKey;
+
+	IF (@AssetType = 'Book')
+	BEGIN
+		SET @FeeAmount += 1.99 --Extra preparation cost for Book AssetTypes
+	END
+
+	IF (@AssetType = 'Movie')
+	BEGIN
+		SET @FeeAmount += .99 --Extra preparation cost for Movie AssetTypes
+	END
+
+	RETURN @FeeAmount;
+END;
+
+---------------------END FUNCTIONS-----------------------
 
 
 /*************************************************************
