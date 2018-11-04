@@ -252,14 +252,11 @@ END
 ----------------------END TRIGGERS-----------------------
 
 
----------------------BEGIN FUNCTIONS---------------------
-
-----------------------END FUNCTIONS----------------------
-
-
-/*
-Andrew's section...
+/*************************************************************
+		Andrew's section...
 */
+
+-- instead of procedure, this could have been a function, but, oh well
 
 CREATE or ALTER PROCEDURE GetFine -- prepend LibraryProject.?
 	@CheckOut date,
@@ -299,12 +296,13 @@ as
 	where UserKey = @UserKey 
 		and Paid = 0
 
-/* TODO: check out a book return it x days late and therefore charge a new fee */
-/* Mark a book as lost, apply replacement fee to user */
+/* TODO: check out a book return it x days late and therefore charge a fee */
+
 
 -- INSERT LibraryProject.Fees (Amount, UserKey) VALUES (3.00, 5) --example 
 
+/* Mark a book as lost, apply replacement fee to user */
 CREATE or ALTER PROCEDURE ReportAssetLost
-	@AssetKey --with that we can find the most recent person where checkedin is null
+	@AssetKey int, --with that we can find the most recent person where checkedin is null
 as
 	
