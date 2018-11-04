@@ -141,6 +141,7 @@ END;
 
 ---------------------BEGIN TRIGGERS----------------------
 --Verify that the limit rules on the number of checkouts is adhered to
+
 CREATE OR ALTER TRIGGER LibraryProject.CheckoutNumberLimit
 ON LibraryProject.AssetLoans
 INSTEAD OF INSERT
@@ -153,11 +154,11 @@ BEGIN
 	DECLARE @LostOn date;
 	DECLARE @CardType varchar(50);
 
-	SELECT @AssetKey = I.AssetKey FROM inserted I;
-	SELECT @UserKey = I.UserKey FROM inserted I;
-	SELECT @LoanedOn = I.LoanedOn FROM inserted I;
-	SELECT @ReturnedOn = I.ReturnedOn FROM inserted I;
-	SELECT @LostOn = I.LostOn FROM inserted I;
+	SELECT @AssetKey	= I.AssetKey   FROM inserted I;
+	SELECT @UserKey		= I.UserKey    FROM inserted I;
+	SELECT @LoanedOn	= I.LoanedOn   FROM inserted I;
+	SELECT @ReturnedOn	= I.ReturnedOn FROM inserted I;
+	SELECT @LostOn		= I.LostOn     FROM inserted I;
 
 	SELECT 
 		@CardType = CT.CardType
@@ -166,6 +167,11 @@ BEGIN
 		LEFT JOIN LibraryProject.CardTypes AS CT ON CT.CardTypeKey = C.CardTypeKey
 	WHERE
 		C.UserKey = @UserKey
+/* Before checking out...
+Is the item available to check out?
+--> "asset cannot be checked out if it is already checked out" <--
+*/
+
 /*
  maybe add a check before this to see if user has fines
  would need another join, maybe? maybe no?
@@ -183,7 +189,7 @@ BEGIN
 				LibraryProject.AssetLoans AS AL
 			WHERE
 				AL.UserKey = @UserKey
-		) < 6 --Checkout limit for Adult CardTypes
+		) < 6 --Checkout limit for Adult CardTypes 
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
 				(AssetKey, UserKey, LoanedOn, ReturnedOn, LostOn)
@@ -255,7 +261,7 @@ END
 Andrew's section...
 */
 
-CREATE or ALTER PROCEDURE GetFine
+CREATE or ALTER PROCEDURE GetFine -- prepend LibraryProject.?
 	@CheckOut date,
 	@CheckIn date,
 	@Fee decimal OUTPUT
@@ -300,4 +306,5 @@ as
 
 CREATE or ALTER PROCEDURE ReportAssetLost
 	@AssetKey --with that we can find the most recent person where checkedin is null
-
+as
+	
