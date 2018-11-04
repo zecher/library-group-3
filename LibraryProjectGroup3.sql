@@ -166,6 +166,7 @@ BEGIN
 		LEFT JOIN LibraryProject.CardTypes AS CT ON CT.CardTypeKey = C.CardTypeKey
 	WHERE
 		C.UserKey = @UserKey
+--- maybe add a check before this to see if user has fines
 
 	IF @CardType = 'Adult'
 	BEGIN
@@ -249,7 +250,7 @@ END
 Andrew's section...
 */
 
-create or ALTER PROCEDURE GetFine
+CREATE or ALTER PROCEDURE GetFine
 	@CheckOut date,
 	@CheckIn date,
 	@Fee decimal OUTPUT
@@ -266,16 +267,32 @@ AS
 
 RETURN @Fee
 
+-- Test all scenarios
 DECLARE @myFee decimal
---this isn't working
-EXEC GetFine @CheckOut = '1980-05-24', @CheckIn = '1980-06-24', @fee = @myFee OUTPUT
+EXEC GetFine @CheckOut = '2018-06-24', @CheckIn = '2018-07-14', @fee = @myFee OUTPUT
 SELECT @myFee
+EXEC GetFine @CheckOut = '2018-06-24', @CheckIn = '2018-07-20', @fee = @myFee OUTPUT
+SELECT @myFee
+EXEC GetFine @CheckOut = '2018-06-24', @CheckIn = '2018-07-24', @fee = @myFee OUTPUT
+SELECT @myFee
+EXEC GetFine @CheckOut = '2018-06-24', @CheckIn = '2018-08-24', @fee = @myFee OUTPUT
+SELECT @myFee
+-- end test
 
-create or ALTER PROCEDURE PayFee
+-- Uh, just in case we need to do that, assumes we have already told them what they owe
+create or ALTER PROCEDURE PayAllFeesForUser
 	@UserKey int
 as
 	update LibraryProject.Fees 
 	set Paid = 1 
-	where UserKey = @UserKey
+	where UserKey = @UserKey 
+		and Paid = 0
 
 /* TODO: check out a book return it x days late and therefore charge a new fee */
+/* Mark a book as lost, apply replacement fee to user */
+
+-- INSERT LibraryProject.Fees (Amount, UserKey) VALUES (3.00, 5) --example 
+
+CREATE or ALTER PROCEDURE ReportAssetLost
+	@AssetKey --with that we can find the most recent person where checkedin is null
+
