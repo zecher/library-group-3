@@ -171,19 +171,11 @@ BEGIN
 		IF
 		(
 			SELECT
-				sub.CheckoutCount
-			FROM
-			(
-				SELECT
-					AL.UserKey,
-					COUNT(AL.AssetLoanKey) AS CheckoutCount
-				FROM 
-					LibraryProject.AssetLoans AS AL
-				GROUP BY
-					AL.UserKey
-			) AS [sub]
+				COUNT(AL.AssetLoanKey) AS CheckoutCount
+			FROM 
+				LibraryProject.AssetLoans AS AL
 			WHERE
-				sub.UserKey = @UserKey
+				AL.UserKey = @UserKey
 		) < 6 --Checkout limit for Adult CardTypes
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
@@ -202,19 +194,11 @@ BEGIN
 		IF
 		(
 			SELECT
-				sub.CheckoutCount
-			FROM
-			(
-				SELECT
-					AL.UserKey,
-					COUNT(AL.AssetLoanKey) AS CheckoutCount
-				FROM 
-					LibraryProject.AssetLoans AS AL
-				GROUP BY
-					AL.UserKey
-			) AS [sub]
+				COUNT(AL.AssetLoanKey) AS CheckoutCount
+			FROM 
+				LibraryProject.AssetLoans AS AL
 			WHERE
-				sub.UserKey = @UserKey
+				AL.UserKey = @UserKey
 		) < 4 --Checkout limit for Teen CardTypes
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
@@ -233,19 +217,11 @@ BEGIN
 		IF
 		(
 			SELECT
-				sub.CheckoutCount
-			FROM
-			(
-				SELECT
-					AL.UserKey,
-					COUNT(AL.AssetLoanKey) AS CheckoutCount
-				FROM 
-					LibraryProject.AssetLoans AS AL
-				GROUP BY
-					AL.UserKey
-			) AS [sub]
+				COUNT(AL.AssetLoanKey) AS CheckoutCount
+			FROM 
+				LibraryProject.AssetLoans AS AL
 			WHERE
-				sub.UserKey = @UserKey
+				AL.UserKey = @UserKey
 		) < 2 --Checkout limit for Child CardTypes
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
