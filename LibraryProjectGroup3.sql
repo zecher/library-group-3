@@ -34,7 +34,7 @@ END;
 
 --Update asset
 CREATE OR ALTER PROCEDURE UpdateAsset
-	@assetTag uniqueidentifier,
+	@assetKey int,
 	@asset varchar(100) = NULL,
 	@assetDescription varchar(max) = NULL,
 	@assetTypeKey int = NULL,
@@ -42,7 +42,8 @@ CREATE OR ALTER PROCEDURE UpdateAsset
 	@restricted bit = NULL,
 	@createdOn datetime = NULL,
 	@deactivatedOn datetime = NULL,
-	@newAssetTag uniqueidentifier = NULL
+	@newAssetTag uniqueidentifier = NULL,
+	@assetTag uniqueidentifier = NULL
 AS
 BEGIN
 	IF (@asset IS NOT NULL)
@@ -51,7 +52,7 @@ BEGIN
 			SET
 				Asset = @asset
 			WHERE
-				LibraryProject.Assets.AssetTag = @assetTag
+				LibraryProject.Assets.AssetKey = @assetKey
 		END
 	IF (@assetDescription IS NOT NULL)
 		BEGIN
@@ -59,7 +60,7 @@ BEGIN
 			SET
 				AssetDescription = @assetDescription
 			WHERE
-				LibraryProject.Assets.AssetTag = @assetTag
+				LibraryProject.Assets.AssetKey = @assetKey
 		END
 	IF (@assetTypeKey IS NOT NULL)
 		BEGIN
@@ -67,7 +68,7 @@ BEGIN
 			SET
 				AssetTypeKey = @assetTypeKey
 			WHERE
-				LibraryProject.Assets.AssetTag = @assetTag
+				LibraryProject.Assets.AssetKey = @assetKey
 		END
 	IF (@replacementCost IS NOT NULL)
 		BEGIN
@@ -75,7 +76,7 @@ BEGIN
 			SET
 				ReplacementCost = @replacementCost
 			WHERE
-				LibraryProject.Assets.AssetTag = @assetTag
+				LibraryProject.Assets.AssetKey = @assetKey
 		END
 	IF (@restricted IS NOT NULL)
 		BEGIN
@@ -83,7 +84,7 @@ BEGIN
 			SET
 				Restricted = @restricted
 			WHERE
-				LibraryProject.Assets.AssetTag = @assetTag
+				LibraryProject.Assets.AssetKey = @assetKey
 		END
 	IF (@createdOn IS NOT NULL)
 		BEGIN
@@ -91,7 +92,7 @@ BEGIN
 			SET
 				CreatedOn = @createdOn
 			WHERE
-				LibraryProject.Assets.AssetTag = @assetTag
+				LibraryProject.Assets.AssetKey = @assetKey
 		END
 	IF (@deactivatedOn IS NOT NULL)
 		BEGIN
@@ -99,15 +100,15 @@ BEGIN
 			SET
 				DeactivatedOn = @deactivatedOn
 			WHERE
-				LibraryProject.Assets.AssetTag = @assetTag
+				LibraryProject.Assets.AssetKey = @assetKey
 		END
-	IF (@newAssetTag IS NOT NULL)
+	IF (@assetTag IS NOT NULL)
 		BEGIN
 			UPDATE LibraryProject.Assets
 			SET
-				AssetTag = @newAssetTag
+				AssetTag = @assetTag
 			WHERE
-				LibraryProject.Assets.AssetTag = @newAssetTag
+				LibraryProject.Assets.AssetKey = @assetKey
 		END
 END;
 
