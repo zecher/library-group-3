@@ -259,20 +259,21 @@ Andrew's section...
 create or ALTER PROCEDURE GetFine
 	@CheckOut date,
 	@CheckIn date,
-	@Fee decimal(2,2) OUTPUT
+	@Fee decimal OUTPUT
 AS
 	declare @DueDate date = dateAdd(dy,21,@CheckOut)
+	declare @DaysLate decimal = datediff(dy,@DueDate,@CheckIn)
 	set @Fee =
 		case 
-			when datediff(dy,@DueDate,@CheckIn) < 4 then 0
-			when datediff(dy,@DueDate,@CheckIn) < 8 then 1
-			when datediff(dy,@DueDate,@CheckIn) < 15 then 2
-		else 3
-	end
+			when @DaysLate < 4 then 0.00
+			when @DaysLate < 8 then 1.00
+			when @DaysLate < 15 then 2.00
+			else 3.00
+		end
 
 RETURN @Fee
 
-DECLARE @myFee decimal(2,2)
+DECLARE @myFee decimal
 --this isn't working
-EXEC GetFine @CheckOut = GETDATE(), @CheckIn = DATEADD(d, 2, GETDATE()), @fee = @myFee OUTPUT
+EXEC GetFine @CheckOut = '1980-05-24', @CheckIn = '1980-06-24', @fee = @myFee OUTPUT
 SELECT @myFee
