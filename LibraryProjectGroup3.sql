@@ -285,6 +285,7 @@ BEGIN
 	RETURN @FeeAmount;
 END;
 
+
 CREATE or ALTER FUNCTION LibraryProject.GetFine 
 (
 	@CheckOut DATE,
@@ -314,7 +315,8 @@ END
 */
 
 -- instead of procedure, this could have been a function, but, oh well
-
+-- Update: See above function
+/*
 CREATE or ALTER PROCEDURE GetFine -- prepend LibraryProject.?
 	@CheckOut date,
 	@CheckIn date,
@@ -343,6 +345,7 @@ SELECT @myFee
 EXEC GetFine @CheckOut = '2018-06-24', @CheckIn = '2018-08-24', @fee = @myFee OUTPUT
 SELECT @myFee
 -- end test
+*/
 
 -- Uh, just in case we need to do that, assumes we have already told them what they owe
 create or ALTER PROCEDURE PayAllFeesForUser
@@ -355,7 +358,6 @@ as
 
 /* TODO: check out a book return it x days late and therefore charge a fee */
 
-
 -- INSERT LibraryProject.Fees (Amount, UserKey) VALUES (3.00, 5) --example 
 
 /* Mark a book as lost, apply replacement fee to user */
@@ -365,6 +367,7 @@ CREATE or ALTER PROCEDURE ReportAssetLost
 	 --with that we can find the most recent person where checkedin is null
 as
 -- wait, don't we wanna check to make sure there is an outstanding check out with no check in??
+-- uh, cause if it's been checked in, it's not lost
 
 	update LibraryProject.Assets
 	set DeactivatedOn = getDate()
@@ -380,9 +383,9 @@ as
 			   WHEN U.ResponsibleUserKey IS NULL
 			   THEN U.UserKey
 			   ELSE U.ResponsibleUserKey
-		   END, 
-		   u.ResponsibleUserKey,
-		   UserFee.ReplacementCost
+		   END as UserKey, 
+		  -- u.ResponsibleUserKey, -- debug
+		   LostAssetFee(@AssetKey) as Amount
 	FROM LibraryProject.Users AS U
 		 INNER JOIN
 	(
@@ -392,7 +395,7 @@ as
 			 INNER JOIN LibraryProject.Assets a ON a.AssetKey = l.AssetKey
 		WHERE --l.AssetKey = @AssetKey
 			  --AND -- more than one most likely
-			  l.ReturnedOn IS NULL		-- should really only be one
+			  l.ReturnedOn IS NULL		-- should really only be one -- What if there's 0?
 	) AS UserFee ON U.UserKey = UserFee.UserKey;
 
 /*
@@ -400,7 +403,6 @@ as
  Should get an error on the 3rd
  Try to have someone check out a book that isn't returned
  
-*/
 */
 
 
