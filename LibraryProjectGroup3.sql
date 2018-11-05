@@ -332,7 +332,7 @@ AS
 
 RETURN @Fee
 
--- Test all scenarios
+-- Test some scenarios
 DECLARE @myFee decimal
 EXEC GetFine @CheckOut = '2018-06-24', @CheckIn = '2018-07-14', @fee = @myFee OUTPUT
 SELECT @myFee
@@ -360,8 +360,48 @@ as
 
 /* Mark a book as lost, apply replacement fee to user */
 CREATE or ALTER PROCEDURE ReportAssetLost
-	@AssetKey int, --with that we can find the most recent person where checkedin is null
+	-- or do we use the unique identifier?
+	@AssetKey int
+	 --with that we can find the most recent person where checkedin is null
 as
+-- wait, don't we wanna check to make sure there is an outstanding check out with no check in??
+
+	update LibraryProject.Assets
+	set DeactivatedOn = getDate()
+	where AssetKey = @AssetKey
+	-- that's the easy part, 
+	-- now we need to create a fee entry for the responsible party, 
+
+	insert into LibraryProject.Fees (UserKey, Amount) 
+	-- there should be a CONSTRAINT in the fees to max out at 29.99 
+
+	-- but think about the children!
+	SELECT CASE
+			   WHEN U.ResponsibleUserKey IS NULL
+			   THEN U.UserKey
+			   ELSE U.ResponsibleUserKey
+		   END, 
+		   u.ResponsibleUserKey,
+		   UserFee.ReplacementCost
+	FROM LibraryProject.Users AS U
+		 INNER JOIN
+	(
+		SELECT l.UserKey, 
+			   a.ReplacementCost
+		FROM LibraryProject.AssetLoans l
+			 INNER JOIN LibraryProject.Assets a ON a.AssetKey = l.AssetKey
+		WHERE --l.AssetKey = @AssetKey
+			  --AND -- more than one most likely
+			  l.ReturnedOn IS NULL		-- should really only be one
+	) AS UserFee ON U.UserKey = UserFee.UserKey;
+
+/*
+ TODO: have a child try to check out 3 books
+ Should get an error on the 3rd
+ Try to have someone check out a book that isn't returned
+ 
+*/
+*/
 
 
 -------------------- BEGIN CONSTRAINTS ----------------------
