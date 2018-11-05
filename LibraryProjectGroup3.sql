@@ -285,6 +285,27 @@ BEGIN
 	RETURN @FeeAmount;
 END;
 
+CREATE or ALTER FUNCTION LibraryProject.GetFine 
+(
+	@CheckOut DATE,
+	@CheckIn DATE
+) RETURNS DECIMAL
+AS
+BEGIN
+	DECLARE @DueDate DATE = DATEADD(dy,21,@CheckOut)
+	DECLARE @DaysLate DECIMAL = DATEDIFF(dy,@DueDate,@CheckIn)
+	DECLARE @Fee DECIMAL;
+	SET @Fee =
+		CASE 
+			WHEN @DaysLate < 4 THEN 0.00
+			WHEN @DaysLate < 8 THEN 1.00
+			WHEN @DaysLate < 15 THEN 2.00
+			ELSE 3.00
+		END
+
+	RETURN @Fee
+END
+
 ---------------------END FUNCTIONS-----------------------
 
 
@@ -341,4 +362,38 @@ as
 CREATE or ALTER PROCEDURE ReportAssetLost
 	@AssetKey int, --with that we can find the most recent person where checkedin is null
 as
-	
+
+
+-------------------- BEGIN CONSTRAINTS ----------------------
+
+ALTER TABLE LibraryProject.Assets
+ADD CONSTRAINT AssetReplacementCostLimit
+	CHECK (ReplacementCost <= 29.99)
+;
+
+-------------------- END CONSTRAINTS ----------------------
+
+-------------------- BEGIN VIEWS ----------------------
+
+CREATE OR ALTER VIEW LibraryProject.AssetFeeView
+AS
+	SELECT
+		AssetFee.*
+	FROM
+		(SELECT
+			A.Asset,
+			CASE 
+				WHEN AL.ReturnedOn IS NOT NULL THEN LibraryProject.GetFine(AL.LoanedOn, AL.ReturnedOn)
+				WHEN AL.LostOn IS NOT NULL THEN LibraryProject.GetFine(AL.LoanedOn, AL.ReturnedOn)
+				ELSE LibraryProject.GetFine(AL.LoanedOn, GETDATE())
+			END AS Fee
+		FROM
+			LibraryProject.Assets A
+			INNER JOIN LibraryProject.AssetLoans AL
+				ON A.AssetKey = AL.AssetKey) AS AssetFee
+WHERE
+	AssetFee.Fee > 0
+;
+		
+
+-------------------- END VIEWS ----------------------
