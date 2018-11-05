@@ -352,6 +352,7 @@ as
 	-- now we need to create a fee entry for the responsible party, 
 
 	insert into LibraryProject.Fees (UserKey, Amount) 
+	-- there should be a CONSTRAINT in the fees to max out at 29.99 
 
 	-- but think about the children!
 	SELECT CASE
@@ -359,6 +360,7 @@ as
 			   THEN U.UserKey
 			   ELSE U.ResponsibleUserKey
 		   END, 
+		   u.ResponsibleUserKey,
 		   UserFee.ReplacementCost
 	FROM LibraryProject.Users AS U
 		 INNER JOIN
@@ -367,9 +369,14 @@ as
 			   a.ReplacementCost
 		FROM LibraryProject.AssetLoans l
 			 INNER JOIN LibraryProject.Assets a ON a.AssetKey = l.AssetKey
-		WHERE l.AssetKey = @AssetKey
-			  AND -- more than one most likely
+		WHERE --l.AssetKey = @AssetKey
+			  --AND -- more than one most likely
 			  l.ReturnedOn IS NULL		-- should really only be one
 	) AS UserFee ON U.UserKey = UserFee.UserKey;
 
-exec ReportAssetLost 5
+/*
+ TODO: have a child try to check out 3 books
+ Should get an error on the 3rd
+ Try to have someone check out a book that isn't returned
+ 
+*/
