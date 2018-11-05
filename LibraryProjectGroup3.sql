@@ -7,6 +7,7 @@ CS 3550
 
 -----------------BEGIN STORED PROCEDURES-----------------
 
+
 --Create new asset types
 CREATE OR ALTER PROCEDURE NewAssetType
 	@assetType varchar(50)
@@ -17,7 +18,6 @@ BEGIN
 	VALUES
 		(@assetType);
 END;
-
 
 --Create assets
 CREATE OR ALTER PROCEDURE CreateAsset
@@ -282,6 +282,11 @@ BEGIN
 		SET @FeeAmount += .99 --Extra preparation cost for Movie AssetTypes
 	END
 
+	IF (@AssetType = 'Audio')
+	BEGIN
+		SET @FeeAmount += 1.49 --Extra preparation cost for Audio AssetTypes
+	END
+
 	RETURN @FeeAmount;
 END;
 
@@ -439,3 +444,10 @@ WHERE
 		
 
 -------------------- END VIEWS ----------------------
+
+-------------------- Begin EXEC ---------------------
+BEGIN
+
+Exec NewAssetType 'Audio' 
+
+END;
