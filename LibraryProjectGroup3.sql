@@ -808,9 +808,13 @@ AS (
 
 -------------------- END VIEWS ----------------------
 
--------------------- Begin EXEC ---------------------
-BEGIN
 
-Exec NewAssetType 'Audio' 
+------------------- BEGIN TASKS ---------------------
+--Create a new asset type
+Exec NewAssetType 'Audio';
 
-END;
+
+--Create 10 new assets.  Make sure two of these assets are restricted.
+--Create assets of the various types you have in your database, including the new one you created above
+
+-------------------- END TASKS ----------------------
