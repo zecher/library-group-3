@@ -238,6 +238,42 @@ BEGIN
 		FeeKey = @feeKey
 END;
 
+CREATE OR ALTER PROCEDURE LibraryProject.LoanAsset
+	@UserKey INT,
+	@AssetKey INT,
+	@LoanDate DATE
+AS
+BEGIN
+	INSERT INTO LibraryProject.AssetLoans
+		(UserKey, AssetKey, LoanedOn)
+	VALUES
+		(@UserKey, @AssetKey, @LoanDate)
+END;
+
+CREATE OR ALTER PROCEDURE LibraryProject.ReturnAsset
+	@AssetLoanKey INT,
+	@ReturnDate DATE
+AS
+BEGIN
+	UPDATE LibraryProject.AssetLoans
+	SET
+		ReturnedOn = @ReturnDate
+	WHERE
+		AssetLoanKey = @AssetLoanKey
+END;
+
+CREATE OR ALTER PROCEDURE LibraryProject.ReportAssetLost
+	@AssetLoanKey INT,
+	@ReportDate DATE
+AS
+BEGIN
+	UPDATE LibraryProject.AssetLoans
+	SET
+		LostOn = @ReportDate
+	WHERE
+		AssetLoanKey = @AssetLoanKey
+END;
+
 ------------------END STORED PROCEDURES------------------
 
 
@@ -460,18 +496,6 @@ as
 /* TODO: check out a book return it x days late and therefore charge a fee */
 
 -- INSERT LibraryProject.Fees (Amount, UserKey) VALUES (3.00, 5) --example 
-
-CREATE OR ALTER PROCEDURE LibraryProject.LoanAsset
-	@UserKey INT,
-	@AssetKey INT,
-	@LoanDate DATE
-AS
-BEGIN
-	INSERT INTO LibraryProject.AssetLoans
-		(UserKey, AssetKey, LoanedOn)
-	VALUES
-		(@UserKey, @AssetKey, @LoanDate)
-END;
 
 /* Mark a book as lost, apply replacement fee to user */
 CREATE or ALTER PROCEDURE ReportAssetLost
