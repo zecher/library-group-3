@@ -481,7 +481,7 @@ CREATE or ALTER FUNCTION LibraryProject.GetFine
 (
 	@CheckOut DATE,
 	@CheckIn DATE
-) RETURNS DECIMAL
+) RETURNS MONEY
 AS
 BEGIN
 	DECLARE @DueDate DATE = DATEADD(dy,21,@CheckOut)
@@ -666,13 +666,51 @@ AS
 --Create a view that shows all overdue books and which of the fee buckets they currently fall in (based on the function above).
 --Include the responsible user (parent if kids books are late) and an email address.
 --This view should only include books that are checked out and currently overdue.
-SELECT
-	*
-FROM
-	LibraryProject.AssetLoans AL
-WHERE
-	AL.ReturnedOn IS NULL
-	AND AL.LostOn IS NULL
+CREATE OR ALTER VIEW LibraryProject.OverdueBookFees
+AS (
+	SELECT
+		A.Asset,
+		A.AssetDescription,
+		AL.LoanedOn,
+		CASE
+			WHEN AL.ReturnedOn IS NOT NULL THEN LibraryProject.GetFine(AL.LoanedOn, AL.ReturnedOn)
+			ELSE LibraryProject.GetFine(AL.LoanedOn, GETDATE())
+		END AS FeeAmount,
+		U.Email,
+		CASE
+			WHEN U.ResponsibleUserKey IS NULL THEN 'None'
+			ELSE
+			(
+				SELECT
+					LibraryProject.Users.FirstName + ' ' + LibraryProject.Users.LastName
+				FROM
+					LibraryProject.Users
+				WHERE
+					LibraryProject.Users.UserKey = U.ResponsibleUserKey
+			)
+			END AS ResponsibleUser,
+		CASE
+			WHEN U.ResponsibleUserKey IS NULL THEN 'None'
+			ELSE
+			(
+				SELECT
+					LibraryProject.Users.Email
+				FROM
+					LibraryProject.Users
+				WHERE
+					LibraryProject.Users.UserKey = U.ResponsibleUserKey
+			)
+		END AS ResponsibleUserEmail
+	FROM
+		LibraryProject.AssetLoans AS AL
+		LEFT JOIN LibraryProject.Assets AS A ON A.AssetKey = AL.AssetKey
+		LEFT JOIN LibraryProject.AssetTypes AS AT ON AT.AssetTypeKey = A.AssetTypeKey
+		LEFT JOIN LibraryProject.Users AS U ON U.UserKey = AL.UserKey
+	WHERE
+		AT.AssetType = 'Book'
+		AND AL.ReturnedOn IS NULL
+		AND AL.LostOn IS NULL
+);
 
 -------------------- END VIEWS ----------------------
 
