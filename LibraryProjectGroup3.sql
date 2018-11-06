@@ -810,11 +810,22 @@ AS (
 
 
 ------------------- BEGIN TASKS ---------------------
---Create a new asset type
-Exec NewAssetType 'Audio';
 
+--Create a new asset type
+Exec LibraryProject.NewAssetType 'Audio';
 
 --Create 10 new assets.  Make sure two of these assets are restricted.
 --Create assets of the various types you have in your database, including the new one you created above
+EXEC LibraryProject.CreateAsset 'Harry Potter and the Sorcerer''s Stone', 'Book 1 in the Harry Potter series by J.K. Rowling', 2, 29.99, 0;
+EXEC LibraryProject.CreateAsset 'Shrek', 'Adventures of an cranky ogre who falls in love with a princess', 1, 9.99, 0;
+EXEC LibraryProject.CreateAsset '19 Naughty III', 'Album by Naught By Nature', 3, 14.99, 1; --Restricted
+EXEC LibraryProject.CreateAsset 'Cloud Atlas', 'Sci-fi movie baed off of book', 1, 19.99, 1; --Restricted
+EXEC LibraryProject.CreateAsset 'Ender''s Game', 'One of the best sci-fi books ever', 2, 8.99, 0;
+EXEC LibraryProject.CreateAsset 'The BFG', 'The classic Big Friendly Giant by Roald Dahl', 2, 4.99, 0;
+EXEC LibraryProject.CreateAsset 'Help!', 'Album by The Beatles', 3, 9.99, 0;
+EXEC LibraryProject.CreateAsset 'To Kill A Mockingbird', 'Classic novel by Harper Lee', 2, 6.99, 0;
+EXEC LibraryProject.CreateAsset 'Fifty Shades of Grey', 'Erotic romance novel by E. L. James', 2, 13.99, 1; --Restricted
+EXEC LibraryProject.CreateAsset 'The Lion King', 'Classic animatred film by Walt Disney Pictures', 1, 4.99, 0;
+
 
 -------------------- END TASKS ----------------------
