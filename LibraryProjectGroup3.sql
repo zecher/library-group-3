@@ -490,7 +490,7 @@ BEGIN
 			@Restricted = 1
 		)
 		BEGIN
-			RAISERROR ('ERROR: Only Adult cardholders can check out restricted assets.')
+			RAISERROR ('ERROR: Only Adult cardholders can check out restricted assets.', 8, 1)
 		END
 	END
 
