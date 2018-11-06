@@ -53,7 +53,7 @@ BEGIN
 END;
 
 -- Update user
-CREATE OR ALTER PROCEDURE LibraryProject.CreateUser --<-- Should this be UpdateUser?
+CREATE OR ALTER PROCEDURE LibraryProject.UpdateUser
 	@UserKey INT,
 	@FirstName VARCHAR(40) = NULL,
 	@LastName VARCHAR(40) = NULL,
