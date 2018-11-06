@@ -267,7 +267,11 @@ BEGIN
 
 	-- Get the user key and associated fine.
 	SELECT
-		@UserKey = U.UserKey,
+		@UserKey = CASE 
+						WHEN U.ResponsibleUserKey IS NULL
+						THEN U.UserKey
+						ELSE U.ResponsibleUserKey
+					END,
 		@Fine = LibraryProject.GetFine(AL.LoanedOn, AL.ReturnedOn) 
 	FROM
 		LibraryProject.AssetLoans AL
