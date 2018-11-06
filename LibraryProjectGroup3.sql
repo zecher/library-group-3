@@ -255,11 +255,35 @@ CREATE OR ALTER PROCEDURE LibraryProject.ReturnAsset
 	@ReturnDate DATE
 AS
 BEGIN
+	DECLARE @Fine INT
+	DECLARE @UserKey INT;
+
+	-- Set return date on loan record.
 	UPDATE LibraryProject.AssetLoans
 	SET
 		ReturnedOn = @ReturnDate
 	WHERE
 		AssetLoanKey = @AssetLoanKey
+
+	-- Get the user key and associated fine.
+	SELECT
+		@UserKey = U.UserKey,
+		@Fine = LibraryProject.GetFine(AL.LoanedOn, AL.ReturnedOn) 
+	FROM
+		LibraryProject.AssetLoans AL
+		INNER JOIN LibraryProject.Users U
+			ON AL.UserKey = U.UserKey
+	;
+
+	-- If the book was turned in late, insert fee record.
+	IF (@FINE > 0)
+	BEGIN
+		INSERT INTO LibraryProject.Fees
+			(Amount, UserKey, Paid)
+		VALUES
+			(@Fine, @UserKey, 0)
+		;
+	END
 END;
 
 CREATE OR ALTER PROCEDURE LibraryProject.ReportAssetLost
