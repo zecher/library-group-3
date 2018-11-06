@@ -274,6 +274,12 @@ BEGIN
 		AssetLoanKey = @AssetLoanKey
 END;
 
+-------- 
+CREATE OR ALTER PROCEDURE LibraryProject.IssueCard
+--
+
+-- CREATE OR ALTER PROCEDURE LibraryProject.DeactivateCard
+
 ------------------END STORED PROCEDURES------------------
 
 
@@ -474,30 +480,29 @@ BEGIN
 
 	IF (@Age <= 12)
 	BEGIN
-		SET @CardTypeKey = 3;
+		SET @CardTypeKey = 3; -- Child
 	END
 	IF (@Age >= 13 AND @Age <= 17)
 	BEGIN
-		SET @CardTypeKey = 2;
+		SET @CardTypeKey = 2; -- Teen
 	END
 	IF (@Age >= 18)
 	BEGIN
-		SET @CardTypeKey = 1;
+		SET @CardTypeKey = 1; -- Adult
 	END
 
 	RETURN @CardTypeKey;
 END;
 
+
 ---------------------END FUNCTIONS-----------------------
 
 
 /*************************************************************
-		Andrew's section...
-*/
-
+	
 -- instead of procedure, this could have been a function, but, oh well
 -- Update: See above function
-/*
+
 CREATE or ALTER PROCEDURE GetFine -- prepend LibraryProject.?
 	@CheckOut date,
 	@CheckIn date,
@@ -529,20 +534,21 @@ SELECT @myFee
 */
 
 -- Uh, just in case we need to do that, assumes we have already told them what they owe
-create or ALTER PROCEDURE PayAllFeesForUser
+create or ALTER PROCEDURE LibraryProject.PayAllFeesForUser
 	@UserKey int
 as
-	update LibraryProject.Fees 
-	set Paid = 1 
-	where UserKey = @UserKey 
-		and Paid = 0
-
+	BEGIN
+		update LibraryProject.Fees 
+		set Paid = 1 
+		where UserKey = @UserKey 
+			and Paid = 0
+	END
 /* TODO: check out a book return it x days late and therefore charge a fee */
 
 -- INSERT LibraryProject.Fees (Amount, UserKey) VALUES (3.00, 5) --example 
 
 /* Mark a book as lost, apply replacement fee to user */
-CREATE or ALTER PROCEDURE ReportAssetLost
+CREATE or ALTER PROCEDURE LibraryProject.ReportAssetLost
 	-- or do we use the unique identifier?
 	@AssetKey int
 	 --with that we can find the most recent person where checkedin is null
@@ -566,7 +572,7 @@ as
 			   ELSE U.ResponsibleUserKey
 		   END as UserKey, 
 		  -- u.ResponsibleUserKey, -- debug
-		   LostAssetFee(@AssetKey) as Amount
+		   LibraryProject.LostAssetFee(@AssetKey) as Amount
 	FROM LibraryProject.Users AS U
 		 INNER JOIN
 	(
@@ -597,7 +603,8 @@ ADD CONSTRAINT AssetReplacementCostLimit
 -------------------- END CONSTRAINTS ----------------------
 
 -------------------- BEGIN VIEWS ----------------------
---Create a view that leverages your fee function to show what fees were generated for each asset that has been checked out and returned (or lost).
+--Create a view that leverages your fee function to show what fees were 
+--generated for each asset that has been checked out and returned (or lost).
 --Have your view only return records where there is a fee of some sort.
 CREATE OR ALTER VIEW LibraryProject.AssetFeeView
 AS
