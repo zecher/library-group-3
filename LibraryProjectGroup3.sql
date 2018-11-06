@@ -53,7 +53,7 @@ BEGIN
 END;
 
 -- Update user
-CREATE OR ALTER PROCEDURE LibraryProject.CreateUser
+CREATE OR ALTER PROCEDURE LibraryProject.CreateUser --<-- Should this be UpdateUser?
 	@UserKey INT,
 	@FirstName VARCHAR(40) = NULL,
 	@LastName VARCHAR(40) = NULL,
@@ -143,8 +143,8 @@ CREATE OR ALTER PROCEDURE LibraryProject.UpdateAsset
 	@deactivatedOn datetime = NULL,
 	@newAssetTag uniqueidentifier = NULL,
 	@assetTag uniqueidentifier = NULL
-AS
-BEGIN
+ AS
+ BEGIN
 	IF (@asset IS NOT NULL)
 		BEGIN
 			UPDATE LibraryProject.Assets
@@ -213,6 +213,9 @@ END;
 
 
 --Deactivate asset
+
+---- is this called from another function that asseses the lost item fee?
+
 CREATE OR ALTER PROCEDURE LibraryProject.DeactivateAsset
 	@assetKey int,
 	@deactivatedOn datetime
@@ -249,7 +252,8 @@ BEGIN
 	VALUES
 		(@UserKey, @AssetKey, @LoanDate)
 END;
-
+-----------------
+-- As we return an asset, if it's overdue, should we insert a fine into the fines table?
 CREATE OR ALTER PROCEDURE LibraryProject.ReturnAsset
 	@AssetLoanKey INT,
 	@ReturnDate DATE
@@ -289,6 +293,8 @@ BEGIN
 		;
 	END
 END;
+----------------
+-- Lost book to fees table?
 
 CREATE OR ALTER PROCEDURE LibraryProject.ReportAssetLost
 	@AssetLoanKey INT,
@@ -302,8 +308,87 @@ BEGIN
 		AssetLoanKey = @AssetLoanKey
 END;
 
+-------- Needed to move the function here because I'm about to use it below
+
+CREATE OR ALTER FUNCTION LibraryProject.GetCardType (@Birthdate DATE)
+RETURNS int
+AS
+BEGIN
+	DECLARE @Age int = DATEDIFF(yyyy,@Birthdate,GetDate());
+	DECLARE @CardTypeKey int;
+
+	IF (@Age <= 12)
+	BEGIN
+		SET @CardTypeKey = 3; -- Child
+	END
+	IF (@Age >= 13 AND @Age <= 17)
+	BEGIN
+		SET @CardTypeKey = 2; -- Teen
+	END
+	IF (@Age >= 18)
+	BEGIN
+		SET @CardTypeKey = 1; -- Adult
+	END
+
+	RETURN @CardTypeKey;
+END;
+
 -------- 
 CREATE OR ALTER PROCEDURE LibraryProject.IssueCard
+	@UserKey INT,
+	@CardNumber char(14)
+AS
+BEGIN
+	--First of all, do you have any fines?
+	if 
+	(
+		SELECT SUM(Amount)
+		FROM LibraryProject.Fees
+		WHERE --UserKey = @UserKey
+			  --AND
+			   Paid = 0
+	) > 0
+	BEGIN 
+		PRINT('There are outstanding fines.  Card can not be issued.')
+	END
+	ELSE
+	BEGIN
+		declare @UserBirthdate date =
+			(select Birthdate
+			from LibraryProject.Users
+			where UserKey = @UserKey)
+			-- Yes, this will deactivate all active cards for the user... 
+			-- Shouldn't be more than one though
+		declare @CardTypeKey int = (LibraryProject.GetCardType(@UserBirthdate) )
+		--declare @CardNumber char(14) -- this might need to just be passed in??
+	
+		IF
+		(
+			SELECT COUNT(CardKey)
+			FROM LibraryProject.Cards
+			WHERE UserKey = @UserKey 
+			AND
+			DeactivatedOn IS NULL
+		) > 0 -- any previously owned cards that aren't deactivated?
+			BEGIN
+				UPDATE LibraryProject.Cards
+				  SET 
+					  DeactivatedOn = GETDATE()
+				WHERE UserKey = @UserKey
+					  AND DeactivatedOn IS NULL;
+			END;
+		insert into LibraryProject.Cards 
+			(CardNumber
+			,UserKey
+			,CardTypeKey
+			,CreatedOn)
+		Values   
+			(@CardNumber
+			,@UserKey
+			,@CardTypeKey
+			,getDate())
+	END
+END
 --
 
 -- CREATE OR ALTER PROCEDURE LibraryProject.DeactivateCard
@@ -499,28 +584,6 @@ BEGIN
 END;
 
 
-CREATE OR ALTER FUNCTION LibraryProject.GetCardType (@Birthdate DATE)
-RETURNS int
-AS
-BEGIN
-	DECLARE @Age int = DATEDIFF(yyyy,@Birthdate,GetDate());
-	DECLARE @CardTypeKey int;
-
-	IF (@Age <= 12)
-	BEGIN
-		SET @CardTypeKey = 3; -- Child
-	END
-	IF (@Age >= 13 AND @Age <= 17)
-	BEGIN
-		SET @CardTypeKey = 2; -- Teen
-	END
-	IF (@Age >= 18)
-	BEGIN
-		SET @CardTypeKey = 1; -- Adult
-	END
-
-	RETURN @CardTypeKey;
-END;
 
 /*--- test code
 select 
