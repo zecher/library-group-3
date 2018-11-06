@@ -494,7 +494,12 @@ BEGIN
 	RETURN @CardTypeKey;
 END;
 
-select LibraryProject.GetCardType('05/24/2006')
+/*--- test code
+select 
+	LibraryProject.GetCardType('06/24/2010') as Child,
+	LibraryProject.GetCardType('06/24/2001') as Teen, 
+	LibraryProject.GetCardType('06/24/2000') as Adult
+*/
 
 ---------------------END FUNCTIONS-----------------------
 
