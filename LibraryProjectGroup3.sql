@@ -432,7 +432,7 @@ AS
 BEGIN
 	DECLARE @DueDate DATE = DATEADD(dy,21,@CheckOut)
 	DECLARE @DaysLate DECIMAL = DATEDIFF(dy,@DueDate,@CheckIn)
-	DECLARE @Fee DECIMAL;
+	DECLARE @Fee MONEY;
 	SET @Fee =
 		CASE 
 			WHEN @DaysLate < 4 THEN 0.00
@@ -441,8 +441,32 @@ BEGIN
 			ELSE 3.00
 		END
 
-	RETURN @Fee
-END
+	RETURN @Fee;
+END;
+
+
+CREATE OR ALTER FUNCTION LibraryProject.GetCardType (@Birthdate DATE)
+RETURNS int
+AS
+BEGIN
+	DECLARE @Age int = DATEDIFF(yyyy,GetDate(),@Birthdate);
+	DECLARE @CardTypeKey int;
+
+	IF (@Age <= 12)
+	BEGIN
+		SET @CardTypeKey = 3;
+	END
+	IF (@Age >= 13 AND @Age <= 17)
+	BEGIN
+		SET @CardTypeKey = 2;
+	END
+	IF (@Age >= 18)
+	BEGIN
+		SET @CardTypeKey = 1;
+	END
+
+	RETURN @CardTypeKey;
+END;
 
 ---------------------END FUNCTIONS-----------------------
 
