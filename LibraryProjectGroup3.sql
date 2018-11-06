@@ -8,6 +8,24 @@ CS 3550
 -----------------BEGIN STORED PROCEDURES-----------------
 
 
+-- Create new users
+CREATE OR ALTER PROCEDURE LibraryProject.CreateUser
+	@FirstName VARCHAR(40),
+	@LastName VARCHAR(40),
+	@Email VARCHAR(50),
+	@Address1 VARCHAR(50),
+	@Address2 VARCHAR(30),
+	@City VARCHAR(30),
+	@StateAbbv CHAR(2),
+	@Birthdate DATE
+AS
+BEGIN
+	INSERT INTO LibraryProject.Users
+		(FirstName, LastName, Email, Address1, Address2, City, StateAbbreviation, Birthdate, CreatedOn)
+	VALUES
+		(@FirstName, @LastName, @Email, @Address1, @Address2, @City, @StateAbbv, @Birthdate, GETDATE());
+END;
+
 --Create new asset types
 CREATE OR ALTER PROCEDURE NewAssetType
 	@assetType varchar(50)
@@ -34,6 +52,84 @@ BEGIN
 		(@asset, @assetDescription, @assetTypeKey, @replacementCost, @restricted);
 END;
 
+-- Update user
+CREATE OR ALTER PROCEDURE LibraryProject.CreateUser
+	@UserKey INT,
+	@FirstName VARCHAR(40) = NULL,
+	@LastName VARCHAR(40) = NULL,
+	@Email VARCHAR(50) = NULL,
+	@Address1 VARCHAR(50) = NULL,
+	@Address2 VARCHAR(30) = NULL,
+	@City VARCHAR(30) = NULL,
+	@StateAbbv CHAR(2) = NULL,
+	@Birthdate DATE = NULL
+AS
+BEGIN
+	IF (@FirstName IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Users
+			SET
+				FirstName = @FirstName
+			WHERE
+				LibraryProject.Users.UserKey = @UserKey
+		END
+	IF (@LastName IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Users
+			SET
+				LastName = @LastName
+			WHERE
+				LibraryProject.Users.UserKey = @UserKey
+		END
+	IF (@Email IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Users
+			SET
+				Email = @Email
+			WHERE
+				LibraryProject.Users.UserKey = @UserKey
+		END
+	IF (@Address1 IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Users
+			SET
+				Address1 = @Address1
+			WHERE
+				LibraryProject.Users.UserKey = @UserKey
+		END
+	IF (@Address2 IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Users
+			SET
+				Address2 = @Address2
+			WHERE
+				LibraryProject.Users.UserKey = @UserKey
+		END
+	IF (@City IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Users
+			SET
+				City = @City
+			WHERE
+				LibraryProject.Users.UserKey = @UserKey
+		END
+	IF (@StateAbbv IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Users
+			SET
+				StateAbbreviation = @StateAbbv
+			WHERE
+				LibraryProject.Users.UserKey = @UserKey
+		END
+	IF (@Birthdate IS NOT NULL)
+		BEGIN
+			UPDATE LibraryProject.Users
+			SET
+				Birthdate = @Birthdate
+			WHERE
+				LibraryProject.Users.UserKey = @UserKey
+		END
+END;
 
 --Update asset
 CREATE OR ALTER PROCEDURE UpdateAsset
@@ -364,6 +460,18 @@ as
 /* TODO: check out a book return it x days late and therefore charge a fee */
 
 -- INSERT LibraryProject.Fees (Amount, UserKey) VALUES (3.00, 5) --example 
+
+CREATE OR ALTER PROCEDURE LibraryProject.LoanAsset
+	@UserKey INT,
+	@AssetKey INT,
+	@LoanDate DATE
+AS
+BEGIN
+	INSERT INTO LibraryProject.AssetLoans
+		(UserKey, AssetKey, LoanedOn)
+	VALUES
+		(@UserKey, @AssetKey, @LoanDate)
+END;
 
 /* Mark a book as lost, apply replacement fee to user */
 CREATE or ALTER PROCEDURE ReportAssetLost
