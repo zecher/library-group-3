@@ -291,6 +291,7 @@ BEGIN
 	DECLARE @ReturnedOn date;
 	DECLARE @LostOn date;
 	DECLARE @CardType varchar(50);
+	DECLARE @Restricted bit;
 
 	SELECT @AssetKey = I.AssetKey FROM inserted I;
 	SELECT @UserKey	= I.UserKey FROM inserted I;
@@ -305,6 +306,14 @@ BEGIN
 		LEFT JOIN LibraryProject.CardTypes AS CT ON CT.CardTypeKey = C.CardTypeKey
 	WHERE
 		C.UserKey = @UserKey
+
+	
+	SELECT
+		@Restricted = A.Restricted
+	FROM
+		LibraryProject.Assets A
+	WHERE
+		A.AssetKey = @AssetKey
 
 	IF @CardType = 'Adult'
 	BEGIN
@@ -326,6 +335,17 @@ BEGIN
 		ELSE
 		BEGIN
 			RAISERROR ('ERROR: Adult card has already reached checkout limit of 6', 8, 1)
+		END
+	END
+	-- If the cardholder is not an adult cardholder check if their asset is restricted.
+	ELSE
+	BEGIN
+		IF
+		(
+			@Restricted = 1
+		)
+		BEGIN
+			RAISERROR ('ERROR: Only Adult cardholders can check out restricted assets.')
 		END
 	END
 
