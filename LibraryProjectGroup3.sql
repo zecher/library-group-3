@@ -461,8 +461,8 @@ BEGIN
 	DECLARE @Fee MONEY;
 	SET @Fee =
 		CASE 
-			WHEN @DaysLate < 4 THEN 0.00
-			WHEN @DaysLate < 8 THEN 1.00
+			WHEN @DaysLate < 4  THEN 0.00
+			WHEN @DaysLate < 8  THEN 1.00
 			WHEN @DaysLate < 15 THEN 2.00
 			ELSE 3.00
 		END
@@ -475,7 +475,7 @@ CREATE OR ALTER FUNCTION LibraryProject.GetCardType (@Birthdate DATE)
 RETURNS int
 AS
 BEGIN
-	DECLARE @Age int = DATEDIFF(yyyy,GetDate(),@Birthdate);
+	DECLARE @Age int = DATEDIFF(yyyy,@Birthdate,GetDate());
 	DECLARE @CardTypeKey int;
 
 	IF (@Age <= 12)
@@ -494,6 +494,7 @@ BEGIN
 	RETURN @CardTypeKey;
 END;
 
+select LibraryProject.GetCardType('05/24/2006')
 
 ---------------------END FUNCTIONS-----------------------
 
