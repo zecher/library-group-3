@@ -241,16 +241,42 @@ BEGIN
 		FeeKey = @feeKey
 END;
 
+--Check out an asset
 CREATE OR ALTER PROCEDURE LibraryProject.LoanAsset
 	@UserKey INT,
 	@AssetKey INT,
 	@LoanDate DATE
 AS
 BEGIN
-	INSERT INTO LibraryProject.AssetLoans
-		(UserKey, AssetKey, LoanedOn)
-	VALUES
-		(@UserKey, @AssetKey, @LoanDate)
+	DECLARE @ReturnedOn DATE;
+	DECLARE @LostOn DATE;
+
+	SELECT TOP 1
+		@ReturnedOn = AL.ReturnedOn,
+		@LostOn = AL.LostOn
+	FROM
+		LibraryProject.AssetLoans AS AL
+	WHERE
+		AL.AssetKey = @AssetKey
+	ORDER BY
+		AL.LoanedOn DESC
+
+	IF (@LostOn IS NOT NULL)
+	BEGIN
+		RAISERROR ('ERROR: That asset is marked as lost', 8, 1)
+	END
+
+	IF (@ReturnedOn IS NOT NULL)
+	BEGIN
+		INSERT INTO LibraryProject.AssetLoans
+			(UserKey, AssetKey, LoanedOn)
+		VALUES
+			(@UserKey, @AssetKey, @LoanDate)
+	END
+	ELSE
+	BEGIN
+		RAISERROR ('ERROR: That asset is currently checked out', 8, 1)
+	END
 END;
 -----------------
 -- As we return an asset, if it's overdue, should we insert a fine into the fines table?
