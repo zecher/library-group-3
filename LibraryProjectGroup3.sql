@@ -27,7 +27,7 @@ BEGIN
 END;
 
 --Create new asset types
-CREATE OR ALTER PROCEDURE NewAssetType
+CREATE OR ALTER PROCEDURE LibraryProject.NewAssetType
 	@assetType varchar(50)
 AS
 BEGIN
@@ -38,7 +38,7 @@ BEGIN
 END;
 
 --Create assets
-CREATE OR ALTER PROCEDURE CreateAsset
+CREATE OR ALTER PROCEDURE LibraryProject.CreateAsset
 	@asset varchar(100),
 	@assetDescription varchar(max),
 	@assetTypeKey int,
@@ -132,7 +132,7 @@ BEGIN
 END;
 
 --Update asset
-CREATE OR ALTER PROCEDURE UpdateAsset
+CREATE OR ALTER PROCEDURE LibraryProject.UpdateAsset
 	@assetKey int,
 	@asset varchar(100) = NULL,
 	@assetDescription varchar(max) = NULL,
@@ -213,7 +213,7 @@ END;
 
 
 --Deactivate asset
-CREATE OR ALTER PROCEDURE DeactivateAsset
+CREATE OR ALTER PROCEDURE LibraryProject.DeactivateAsset
 	@assetKey int,
 	@deactivatedOn datetime
 AS
@@ -227,7 +227,7 @@ END;
 
 
 --Pay fees (one at a time)
-CREATE OR ALTER PROCEDURE PayFee
+CREATE OR ALTER PROCEDURE LibraryProject.PayFee
 	@feeKey int
 AS
 BEGIN
@@ -529,7 +529,8 @@ ADD CONSTRAINT AssetReplacementCostLimit
 -------------------- END CONSTRAINTS ----------------------
 
 -------------------- BEGIN VIEWS ----------------------
-
+--Create a view that leverages your fee function to show what fees were generated for each asset that has been checked out and returned (or lost).
+--Have your view only return records where there is a fee of some sort.
 CREATE OR ALTER VIEW LibraryProject.AssetFeeView
 AS
 	SELECT
@@ -556,7 +557,18 @@ AS
 	WHERE
 		AssetFee.Fee > 0
 ;
-		
+
+
+--Create a view that shows all overdue books and which of the fee buckets they currently fall in (based on the function above).
+--Include the responsible user (parent if kids books are late) and an email address.
+--This view should only include books that are checked out and currently overdue.
+SELECT
+	*
+FROM
+	LibraryProject.AssetLoans AL
+WHERE
+	AL.ReturnedOn IS NULL
+	AND AL.LostOn IS NULL
 
 -------------------- END VIEWS ----------------------
 
