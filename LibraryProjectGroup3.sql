@@ -250,7 +250,7 @@ END
 --------------------BEGIN FUNCTIONS----------------------
 
 --Create a function that provides an all-in cost for replacing an asset
-CREATE OR ALTER FUNCTION LostAssetFee(@AssetKey int)
+CREATE OR ALTER FUNCTION LibraryProject.LostAssetFee(@AssetKey int)
 RETURNS money
 AS
 BEGIN
@@ -429,17 +429,24 @@ AS
 	FROM
 		(SELECT
 			A.Asset,
+			CASE
+			   WHEN U.ResponsibleUserKey IS NULL
+			   THEN U.UserKey
+			   ELSE U.ResponsibleUserKey
+			END AS UserKey, 
 			CASE 
 				WHEN AL.ReturnedOn IS NOT NULL THEN LibraryProject.GetFine(AL.LoanedOn, AL.ReturnedOn)
-				WHEN AL.LostOn IS NOT NULL THEN LibraryProject.GetFine(AL.LoanedOn, AL.ReturnedOn)
+				WHEN AL.LostOn IS NOT NULL THEN LibraryProject.LostAssetFee(A.AssetKey)
 				ELSE LibraryProject.GetFine(AL.LoanedOn, GETDATE())
 			END AS Fee
 		FROM
 			LibraryProject.Assets A
 			INNER JOIN LibraryProject.AssetLoans AL
-				ON A.AssetKey = AL.AssetKey) AS AssetFee
-WHERE
-	AssetFee.Fee > 0
+				ON A.AssetKey = AL.AssetKey
+			INNER JOIN LibraryProject.Users U
+				ON AL.UserKey = U.UserKey) AS AssetFee
+	WHERE
+		AssetFee.Fee > 0
 ;
 		
 
