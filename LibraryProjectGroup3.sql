@@ -248,10 +248,12 @@ CREATE OR ALTER PROCEDURE LibraryProject.LoanAsset
 	@LoanDate DATE
 AS
 BEGIN
+	DECLARE @ExistingKey INT;
 	DECLARE @ReturnedOn DATE;
 	DECLARE @LostOn DATE;
 
 	SELECT TOP 1
+		@ExistingKey = AL.AssetLoanKey,
 		@ReturnedOn = AL.ReturnedOn,
 		@LostOn = AL.LostOn
 	FROM
@@ -260,22 +262,33 @@ BEGIN
 		AL.AssetKey = @AssetKey
 	ORDER BY
 		AL.LoanedOn DESC
-
-	IF (@LostOn IS NOT NULL)
+	-- This checks for assets that have never been checked out so they won't have any AssetLoans records.
+	IF (@ExistingKey IS NOT NULL)
 	BEGIN
-		RAISERROR ('ERROR: That asset is marked as lost', 8, 1)
-	END
+		IF (@LostOn IS NOT NULL)
+		BEGIN
+			RAISERROR ('ERROR: That asset is marked as lost', 8, 1)
+		END
 
-	IF (@ReturnedOn IS NOT NULL)
+		IF (@ReturnedOn IS NOT NULL)
+		BEGIN
+			INSERT INTO LibraryProject.AssetLoans
+				(UserKey, AssetKey, LoanedOn)
+			VALUES
+				(@UserKey, @AssetKey, @LoanDate)
+		END
+		ELSE
+		BEGIN
+			RAISERROR ('ERROR: That asset is currently checked out', 8, 1)
+		END
+	END
+	-- If no record was found, we can simply go through with the insert because this asset has never been checked out.
+	ELSE
 	BEGIN
 		INSERT INTO LibraryProject.AssetLoans
 			(UserKey, AssetKey, LoanedOn)
 		VALUES
 			(@UserKey, @AssetKey, @LoanDate)
-	END
-	ELSE
-	BEGIN
-		RAISERROR ('ERROR: That asset is currently checked out', 8, 1)
 	END
 END;
 -----------------
@@ -827,5 +840,12 @@ EXEC LibraryProject.CreateAsset 'To Kill A Mockingbird', 'Classic novel by Harpe
 EXEC LibraryProject.CreateAsset 'Fifty Shades of Grey', 'Erotic romance novel by E. L. James', 2, 13.99, 1; --Restricted
 EXEC LibraryProject.CreateAsset 'The Lion King', 'Classic animatred film by Walt Disney Pictures', 1, 4.99, 0;
 
+BEGIN
+	DECLARE @Today DATE = GETDATE();
+
+	-- User key 2 has a teen card.
+	-- Asset 7 is restricted.
+	EXEC LibraryProject.LoanAsset 2, 7, @Today;
+END
 
 -------------------- END TASKS ----------------------
