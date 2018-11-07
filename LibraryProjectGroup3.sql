@@ -829,6 +829,8 @@ AS (
 
 
 ------------------- BEGIN TASKS ---------------------
+-- Date variable used in a number of our tasks.
+DECLARE @Today DATE = GETDATE();
 
 --Create a new asset type
 Exec LibraryProject.NewAssetType 'Audio';
@@ -846,9 +848,8 @@ EXEC LibraryProject.CreateAsset 'To Kill A Mockingbird', 'Classic novel by Harpe
 EXEC LibraryProject.CreateAsset 'Fifty Shades of Grey', 'Erotic romance novel by E. L. James', 2, 13.99, 1; --Restricted
 EXEC LibraryProject.CreateAsset 'The Lion King', 'Classic animatred film by Walt Disney Pictures', 1, 4.99, 0;
 
-BEGIN
-	DECLARE @Today DATE = GETDATE();
 
+BEGIN
 	-- User key 2 has a teen card.
 	-- Asset 7 is restricted.
 	EXEC LibraryProject.LoanAsset 2, 7, @Today;
@@ -857,10 +858,56 @@ END
 --Try to check out enough items to exceed the threshold for a user.
 --This is probably easiest done for a child user
 --UserKey 4 Jordan Smith is a child user
-DECLARE @TodayAgain DATE = GETDATE();
-EXEC LibraryProject.LoanAsset 4, 18, @TodayAgain; --1 item checked out...
-EXEC LibraryProject.LoanAsset 4, 16, @TodayAgain; --2 items checked out...
-EXEC LibraryProject.LoanAsset 4, 10, @TodayAgain; --3 items checked out, should fail...
+EXEC LibraryProject.LoanAsset 4, 18, @Today; --1 item checked out...
+EXEC LibraryProject.LoanAsset 4, 16, @Today; --2 items checked out...
+EXEC LibraryProject.LoanAsset 4, 10, @Today; --3 items checked out, should fail...
+
+--This checkouts then checks in 3 books.
+BEGIN
+	-- Variables for the test checkout and checkin date. 
+	DECLARE @CheckoutDate DATE = '2018-10-25'; -- Checkout Date is more than 21 days in the past.
+	DECLARE @CheckinDate DATE = '2018-10-30';
+	
+	-- Variables used to store the new asset loan keys.
+	DECLARE @AssetLoanKey1 INT;
+	DECLARE @AssetLoanKey2 INT;
+	DECLARE @AssetLoanKey3 INT;
+
+	-- First checks out a book.
+	EXEC LibraryProject.LoanAsset 1, 6, @CheckoutDate;
+
+	-- Second gets its asset loan key.
+	SELECT TOP 1
+		@AssetLoanKey1 = AssetLoanKey
+	FROM
+		LibraryProject.AssetLoans
+	ORDER BY
+		AssetLoanKey DESC
+
+	-- Rinse and Repeat.
+	EXEC LibraryProject.LoanAsset 1, 3, @CheckoutDate;
+
+	SELECT TOP 1
+		@AssetLoanKey2 = AssetLoanKey
+	FROM
+		LibraryProject.AssetLoans
+	ORDER BY
+		AssetLoanKey DESC
+
+	EXEC LibraryProject.LoanAsset 1, 4, @CheckoutDate;
+
+	SELECT TOP 1
+		@AssetLoanKey3 = AssetLoanKey
+	FROM
+		LibraryProject.AssetLoans
+	ORDER BY
+		AssetLoanKey DESC
+	
+	-- Checks in the 3 books. 
+	EXEC LibraryProject.ReturnAsset @AssetLoanKey1, @Today; -- This will be late and should generate a fee.
+	EXEC LibraryProject.ReturnAsset @AssetLoanKey2, @CheckinDate;
+	EXEC LibraryProject.ReturnAsset @AssetLoanKey3, @CheckinDate;
+END
 
 
 -------------------- END TASKS ----------------------
