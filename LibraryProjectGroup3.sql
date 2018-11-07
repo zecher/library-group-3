@@ -854,4 +854,13 @@ BEGIN
 	EXEC LibraryProject.LoanAsset 2, 7, @Today;
 END
 
+--Try to check out enough items to exceed the threshold for a user.
+--This is probably easiest done for a child user
+--UserKey 4 Jordan Smith is a child user
+DECLARE @TodayAgain DATE = GETDATE();
+EXEC LibraryProject.LoanAsset 4, 18, @TodayAgain; --1 item checked out...
+EXEC LibraryProject.LoanAsset 4, 16, @TodayAgain; --2 items checked out...
+EXEC LibraryProject.LoanAsset 4, 10, @TodayAgain; --3 items checked out, should fail...
+
+
 -------------------- END TASKS ----------------------
