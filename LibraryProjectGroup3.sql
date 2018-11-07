@@ -483,6 +483,8 @@ BEGIN
 				LibraryProject.AssetLoans AS AL
 			WHERE
 				AL.UserKey = @UserKey
+				AND AL.ReturnedOn IS NULL
+				AND AL.LostOn IS NULL
 		) < 6 --Checkout limit for Adult CardTypes 
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
@@ -517,6 +519,8 @@ BEGIN
 				LibraryProject.AssetLoans AS AL
 			WHERE
 				AL.UserKey = @UserKey
+				AND AL.ReturnedOn IS NULL
+				AND AL.LostOn IS NULL
 		) < 4 --Checkout limit for Teen CardTypes
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
@@ -540,6 +544,8 @@ BEGIN
 				LibraryProject.AssetLoans AS AL
 			WHERE
 				AL.UserKey = @UserKey
+				AND AL.ReturnedOn IS NULL
+				AND AL.LostOn IS NULL
 		) < 2 --Checkout limit for Child CardTypes
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
