@@ -268,9 +268,10 @@ BEGIN
 		IF (@LostOn IS NOT NULL)
 		BEGIN
 			RAISERROR ('ERROR: That asset is marked as lost', 8, 1)
+			RETURN
 		END
 
-		IF (@ReturnedOn IS NULL)
+		IF (@ReturnedOn IS NOT NULL)
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
 				(UserKey, AssetKey, LoanedOn)
@@ -280,6 +281,7 @@ BEGIN
 		ELSE
 		BEGIN
 			RAISERROR ('ERROR: That asset is currently checked out', 8, 1)
+			RETURN
 		END
 	END
 	-- If no record was found, we can simply go through with the insert because this asset has never been checked out.
@@ -495,6 +497,7 @@ BEGIN
 		ELSE
 		BEGIN
 			RAISERROR ('ERROR: Adult card has already reached checkout limit of 6', 8, 1)
+			RETURN
 		END
 	END
 	-- If the cardholder is not an adult cardholder check if their asset is restricted.
@@ -506,6 +509,7 @@ BEGIN
 		)
 		BEGIN
 			RAISERROR ('ERROR: Only Adult cardholders can check out restricted assets.', 8, 1)
+			RETURN
 		END
 	END
 
@@ -531,6 +535,7 @@ BEGIN
 		ELSE
 		BEGIN
 			RAISERROR ('ERROR: Teen card has already reached checkout limit of 4', 8, 1)
+			RETURN
 		END
 	END
 
@@ -556,6 +561,7 @@ BEGIN
 		ELSE
 		BEGIN
 			RAISERROR ('ERROR: Child card has already reached checkout limit of 2', 8, 1)
+			RETURN
 		END
 	END
 END
@@ -829,8 +835,6 @@ AS (
 
 
 ------------------- BEGIN TASKS ---------------------
--- Date variable used in a number of our tasks.
-DECLARE @Today DATE = GETDATE();
 
 --Create a new asset type
 Exec LibraryProject.NewAssetType 'Audio';
@@ -849,7 +853,11 @@ EXEC LibraryProject.CreateAsset 'Fifty Shades of Grey', 'Erotic romance novel by
 EXEC LibraryProject.CreateAsset 'The Lion King', 'Classic animatred film by Walt Disney Pictures', 1, 4.99, 0;
 
 
+-- Date variable used in a number of our tasks.
+
 BEGIN
+	DECLARE @Today DATE = GETDATE();
+
 	-- User key 2 has a teen card.
 	-- Asset 7 is restricted.
 	EXEC LibraryProject.LoanAsset 2, 7, @Today;
@@ -858,15 +866,24 @@ END
 --Try to check out enough items to exceed the threshold for a user.
 --This is probably easiest done for a child user
 --UserKey 4 Jordan Smith is a child user
-EXEC LibraryProject.LoanAsset 4, 18, @Today; --1 item checked out...
-EXEC LibraryProject.LoanAsset 4, 16, @Today; --2 items checked out...
-EXEC LibraryProject.LoanAsset 4, 10, @Today; --3 items checked out, should fail...
+DECLARE @Today2 DATE = GETDATE();
+EXEC LibraryProject.LoanAsset 4, 18, @Today2; --1 item checked out...
+EXEC LibraryProject.LoanAsset 4, 16, @Today2; --2 items checked out...
+EXEC LibraryProject.LoanAsset 4, 10, @Today2; --3 items checked out, should fail...
+
+--Two or three that work as expected�
+DECLARE @Today3 DATE = GETDATE();
+EXEC LibraryProject.LoanAsset 6, 3, @Today3; --1 that works as expected...
+EXEC LibraryProject.LoanAsset 6, 6, @Today3; --1 that works as expected...
+EXEC LibraryProject.LoanAsset 6, 9, @Today3; --1 that works as expected...
+
 
 --This checkouts then checks in 3 books.
 BEGIN
 	-- Variables for the test checkout and checkin date. 
 	DECLARE @CheckoutDate DATE = '2018-10-25'; -- Checkout Date is more than 21 days in the past.
 	DECLARE @CheckinDate DATE = '2018-10-30';
+	DECLARE @Today4 DATE = GETDATE();
 	
 	-- Variables used to store the new asset loan keys.
 	DECLARE @AssetLoanKey1 INT;
@@ -904,7 +921,7 @@ BEGIN
 		AssetLoanKey DESC
 	
 	-- Checks in the 3 books. 
-	EXEC LibraryProject.ReturnAsset @AssetLoanKey1, @Today; -- This will be late and should generate a fee.
+	EXEC LibraryProject.ReturnAsset @AssetLoanKey1, @Today4; -- This will be late and should generate a fee.
 	EXEC LibraryProject.ReturnAsset @AssetLoanKey2, @CheckinDate;
 	EXEC LibraryProject.ReturnAsset @AssetLoanKey3, @CheckinDate;
 END
