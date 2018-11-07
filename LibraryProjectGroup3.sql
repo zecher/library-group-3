@@ -253,14 +253,13 @@ BEGIN
 	DECLARE @LostOn DATE;
 
 	SELECT TOP 1
-		--@ExistingKey = AL.AssetLoanKey,
-		--@ReturnedOn = AL.ReturnedOn,
-		--@LostOn = AL.LostOn
-		*
+		@ExistingKey = AL.AssetLoanKey,
+		@ReturnedOn = AL.ReturnedOn,
+		@LostOn = AL.LostOn
 	FROM
 		LibraryProject.AssetLoans AS AL
 	WHERE
-		AL.AssetKey = 1--@AssetKey
+		AL.AssetKey = @AssetKey
 	ORDER BY
 		AL.LoanedOn DESC
 	-- This checks for assets that have never been checked out so they won't have any AssetLoans records.
