@@ -253,13 +253,14 @@ BEGIN
 	DECLARE @LostOn DATE;
 
 	SELECT TOP 1
-		@ExistingKey = AL.AssetLoanKey,
-		@ReturnedOn = AL.ReturnedOn,
-		@LostOn = AL.LostOn
+		--@ExistingKey = AL.AssetLoanKey,
+		--@ReturnedOn = AL.ReturnedOn,
+		--@LostOn = AL.LostOn
+		*
 	FROM
 		LibraryProject.AssetLoans AS AL
 	WHERE
-		AL.AssetKey = @AssetKey
+		AL.AssetKey = 1--@AssetKey
 	ORDER BY
 		AL.LoanedOn DESC
 	-- This checks for assets that have never been checked out so they won't have any AssetLoans records.
@@ -270,7 +271,7 @@ BEGIN
 			RAISERROR ('ERROR: That asset is marked as lost', 8, 1)
 		END
 
-		IF (@ReturnedOn IS NULL)
+		IF (@ReturnedOn IS NOT NULL)
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
 				(UserKey, AssetKey, LoanedOn)
@@ -857,10 +858,18 @@ END
 --Try to check out enough items to exceed the threshold for a user.
 --This is probably easiest done for a child user
 --UserKey 4 Jordan Smith is a child user
-DECLARE @TodayAgain DATE = GETDATE();
-EXEC LibraryProject.LoanAsset 4, 18, @TodayAgain; --1 item checked out...
-EXEC LibraryProject.LoanAsset 4, 16, @TodayAgain; --2 items checked out...
-EXEC LibraryProject.LoanAsset 4, 10, @TodayAgain; --3 items checked out, should fail...
+DECLARE @Today2 DATE = GETDATE();
+EXEC LibraryProject.LoanAsset 4, 18, @Today2; --1 item checked out...
+EXEC LibraryProject.LoanAsset 4, 16, @Today2; --2 items checked out...
+EXEC LibraryProject.LoanAsset 4, 10, @Today2; --3 items checked out, should fail...
 
+--Two or three that work as expected…
+DECLARE @Today3 DATE = GETDATE();
+EXEC LibraryProject.LoanAsset 6, 2, @Today3; --1 that works as expected...
+EXEC LibraryProject.LoanAsset 6, 1, @Today3; --1 that works as expected...
+EXEC LibraryProject.LoanAsset 6, 5, @Today3; --1 that works as expected...
 
+SELECT * FROM LibraryProject.Users
+SELECT * FROM LibraryProject.Assets
+SELECT * FROM LibraryProject.AssetLoans
 -------------------- END TASKS ----------------------
