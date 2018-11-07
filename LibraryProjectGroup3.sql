@@ -270,7 +270,7 @@ BEGIN
 			RAISERROR ('ERROR: That asset is marked as lost', 8, 1)
 		END
 
-		IF (@ReturnedOn IS NOT NULL)
+		IF (@ReturnedOn IS NULL)
 		BEGIN
 			INSERT INTO LibraryProject.AssetLoans
 				(UserKey, AssetKey, LoanedOn)
