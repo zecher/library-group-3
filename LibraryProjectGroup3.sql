@@ -838,6 +838,15 @@ AS (
 
 --Create a new asset type
 Exec LibraryProject.NewAssetType 'Audio';
+-- Tyler Durden has lost the book �Mistborn�.  
+-- His library card was in the book (used as a bookmark).  
+-- Report the book lost, 
+exec LibraryProject.ReportAssetLost 2 -- Internal knowledge, 2 = Mistborn
+-- make sure he pays his fees, 
+exec LibraryProject.PayAllFeesForUser 5 -- Shotgun approach, sure, and yeah Tyler is user 5
+-- and issue him a new card
+exec LibraryProject.IssueCard 5, 'a123-456-7890' --the a could have been procedurally generated, but whatever
+
 
 --Create 10 new assets.  Make sure two of these assets are restricted.
 --Create assets of the various types you have in your database, including the new one you created above
@@ -878,6 +887,13 @@ EXEC LibraryProject.LoanAsset 6, 6, @Today3; --1 that works as expected...
 EXEC LibraryProject.LoanAsset 6, 9, @Today3; --1 that works as expected...
 
 
+--Keyser Soze has moved to 4242 Not Here Way in Plain City, UT.
+--Use your stored procedure to update his address
+SELECT * FROM LibraryProject.Users
+EXEC LibraryProject.UpdateUser @UserKey = 6, @Address1 = '4242 Not Here Way', @City = 'Plain City', @StateAbbv = 'UT';
+
+-------------------- END TASKS ----------------------
+-------------------- END TASKS ----------------------
 --This checkouts then checks in 3 books.
 BEGIN
 	-- Variables for the test checkout and checkin date. 
