@@ -248,6 +248,18 @@ CREATE OR ALTER PROCEDURE LibraryProject.LoanAsset
 	@LoanDate DATE
 AS
 BEGIN
+	IF 
+	(SELECT 
+		SUM(Amount)
+	FROM LibraryProject.Fees
+	WHERE UserKey = @UserKey
+		  AND Paid = 0
+	GROUP BY Amount) > 0
+	Begin
+		RAISERROR ('ERROR: User must pay fees first', 8, 1)
+		return 
+	End
+
 	DECLARE @ExistingKey INT;
 	DECLARE @ReturnedOn DATE;
 	DECLARE @LostOn DATE;
@@ -429,7 +441,7 @@ BEGIN
 			,@CardTypeKey
 			,getDate())
 	END
-END
+END --issueCard
 --
 
 -- CREATE OR ALTER PROCEDURE LibraryProject.DeactivateCard
@@ -564,7 +576,7 @@ BEGIN
 			RETURN
 		END
 	END
-END
+END -- checkoutLimit
 
 ----------------------END TRIGGERS-----------------------
 
@@ -846,8 +858,10 @@ exec LibraryProject.ReportAssetLost 2 -- Internal knowledge, 2 = Mistborn
 exec LibraryProject.PayAllFeesForUser 5 -- Shotgun approach, sure, and yeah Tyler is user 5
 -- and issue him a new card
 exec LibraryProject.IssueCard 5, 'a123-456-7890' --the a could have been procedurally generated, but whatever
+---------------------------------------------------------------------------
 
 
+---------------------------------------------------------------------------
 --Create 10 new assets.  Make sure two of these assets are restricted.
 --Create assets of the various types you have in your database, including the new one you created above
 EXEC LibraryProject.CreateAsset 'Harry Potter and the Sorcerer''s Stone', 'Book 1 in the Harry Potter series by J.K. Rowling', 2, 29.99, 0;
@@ -870,10 +884,24 @@ BEGIN
 	-- User key 2 has a teen card.
 	-- Asset 7 is restricted.
 	EXEC LibraryProject.LoanAsset 2, 7, @Today;
+-- Also, try to check out a book to someone who has a fee, Tyler
+	EXEC LibraryProject.LoanAsset 5, 9, @Today;
 END
+-- Tyler Durden has lost the book “Mistborn”.  ----------------------------
+-- His library card was in the book (used as a bookmark).  
+-- Report the book lost, 
+exec LibraryProject.ReportAssetLost 2 -- Internal knowledge, 2 = Mistborn
+-- while we know he has a fee, let's try to checkl out a book
+-- make sure he pays his fees, 
+exec LibraryProject.PayAllFeesForUser 5 -- Shotgun approach, sure, and yeah Tyler is user 5
+-- and issue him a new card 
+--(this method is also lazy/ssumptive.... deactivates all cards they own)
 
+exec LibraryProject.IssueCard 5, 'a123-456-7890' --the a could have been procedurally generated, but whatever
+---------------------
 --Try to check out enough items to exceed the threshold for a user.
 --This is probably easiest done for a child user
+
 --UserKey 4 Jordan Smith is a child user
 DECLARE @Today2 DATE = GETDATE();
 EXEC LibraryProject.LoanAsset 4, 18, @Today2; --1 item checked out...
@@ -886,6 +914,19 @@ EXEC LibraryProject.LoanAsset 6, 3, @Today3; --1 that works as expected...
 EXEC LibraryProject.LoanAsset 6, 6, @Today3; --1 that works as expected...
 EXEC LibraryProject.LoanAsset 6, 9, @Today3; --1 that works as expected...
 
+EXEC LibraryProject.CreateUser 
+'Andrew','Merrell','AndrewMerrell1@weber.edu','1234 w 321 s','','Clearfield','UT','01/01/1980'
+EXEC LibraryProject.CreateUser 
+'Jonas','Riney-Merrell','AndrewMerrell1@weber.edu','1234 w 321 s','','Clearfield','UT','01/01/2001'
+EXEC LibraryProject.CreateUser 
+'Naia','Riney-Merrell','AndrewMerrell1@weber.edu','1234 w 321 s','','Clearfield','UT','01/01/2010'
+--- ok, so maybe there should be a create children funtion where you 
+---  pass names and birthdays for children and a user key for the adult?  Ohh well
+update LibraryProject.Users 
+set ResponsibleUserKey = 7 
+where LastName = 'Riney-Merrell'
+
+Select * from LibraryProject.Users
 
 --Keyser Soze has moved to 4242 Not Here Way in Plain City, UT.
 --Use your stored procedure to update his address
