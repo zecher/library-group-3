@@ -268,6 +268,7 @@ BEGIN
 		IF (@LostOn IS NOT NULL)
 		BEGIN
 			RAISERROR ('ERROR: That asset is marked as lost', 8, 1)
+			RETURN
 		END
 
 		IF (@ReturnedOn IS NOT NULL)
@@ -280,6 +281,7 @@ BEGIN
 		ELSE
 		BEGIN
 			RAISERROR ('ERROR: That asset is currently checked out', 8, 1)
+			RETURN
 		END
 	END
 	-- If no record was found, we can simply go through with the insert because this asset has never been checked out.
@@ -495,6 +497,7 @@ BEGIN
 		ELSE
 		BEGIN
 			RAISERROR ('ERROR: Adult card has already reached checkout limit of 6', 8, 1)
+			RETURN
 		END
 	END
 	-- If the cardholder is not an adult cardholder check if their asset is restricted.
@@ -506,6 +509,7 @@ BEGIN
 		)
 		BEGIN
 			RAISERROR ('ERROR: Only Adult cardholders can check out restricted assets.', 8, 1)
+			RETURN
 		END
 	END
 
@@ -531,6 +535,7 @@ BEGIN
 		ELSE
 		BEGIN
 			RAISERROR ('ERROR: Teen card has already reached checkout limit of 4', 8, 1)
+			RETURN
 		END
 	END
 
@@ -556,6 +561,7 @@ BEGIN
 		ELSE
 		BEGIN
 			RAISERROR ('ERROR: Child card has already reached checkout limit of 2', 8, 1)
+			RETURN
 		END
 	END
 END
