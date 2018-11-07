@@ -397,8 +397,8 @@ BEGIN
 	(
 		SELECT SUM(Amount)
 		FROM LibraryProject.Fees
-		WHERE --UserKey = @UserKey
-			  --AND
+		WHERE UserKey = @UserKey
+			  AND
 			   Paid = 0
 	) > 0
 	BEGIN 
@@ -862,6 +862,7 @@ exec LibraryProject.IssueCard 5, 'a123-456-7890' --the a could have been procedu
 
 
 ---------------------------------------------------------------------------
+
 --Create 10 new assets.  Make sure two of these assets are restricted.
 --Create assets of the various types you have in your database, including the new one you created above
 EXEC LibraryProject.CreateAsset 'Harry Potter and the Sorcerer''s Stone', 'Book 1 in the Harry Potter series by J.K. Rowling', 2, 29.99, 0;
@@ -875,15 +876,12 @@ EXEC LibraryProject.CreateAsset 'To Kill A Mockingbird', 'Classic novel by Harpe
 EXEC LibraryProject.CreateAsset 'Fifty Shades of Grey', 'Erotic romance novel by E. L. James', 2, 13.99, 1; --Restricted
 EXEC LibraryProject.CreateAsset 'The Lion King', 'Classic animatred film by Walt Disney Pictures', 1, 4.99, 0;
 
-
--- Date variable used in a number of our tasks.
-
 BEGIN
 	DECLARE @Today DATE = GETDATE();
 
 	-- User key 2 has a teen card.
 	-- Asset 7 is restricted.
-	EXEC LibraryProject.LoanAsset 2, 7, @Today;
+	exec LibraryProject.LoanAsset 2, 7, @Today;
 -- Also, try to check out a book to someone who has a fee, Tyler
 	EXEC LibraryProject.LoanAsset 5, 9, @Today;
 END
@@ -908,7 +906,7 @@ EXEC LibraryProject.LoanAsset 4, 18, @Today2; --1 item checked out...
 EXEC LibraryProject.LoanAsset 4, 16, @Today2; --2 items checked out...
 EXEC LibraryProject.LoanAsset 4, 10, @Today2; --3 items checked out, should fail...
 
---Two or three that work as expectedï¿½
+--Two or three that work as expected…
 DECLARE @Today3 DATE = GETDATE();
 EXEC LibraryProject.LoanAsset 6, 3, @Today3; --1 that works as expected...
 EXEC LibraryProject.LoanAsset 6, 6, @Today3; --1 that works as expected...
@@ -926,14 +924,17 @@ update LibraryProject.Users
 set ResponsibleUserKey = 7 
 where LastName = 'Riney-Merrell'
 
-Select * from LibraryProject.Users
+--Select * from LibraryProject.Users
+exec LibraryProject.IssueCard 7, 'a801-651-5127'
+exec LibraryProject.IssueCard 8, 't801-651-5127'
+exec LibraryProject.IssueCard 9, 'c801-651-5127'
+--select * from LibraryProject.Cards
 
 --Keyser Soze has moved to 4242 Not Here Way in Plain City, UT.
 --Use your stored procedure to update his address
 SELECT * FROM LibraryProject.Users
 EXEC LibraryProject.UpdateUser @UserKey = 6, @Address1 = '4242 Not Here Way', @City = 'Plain City', @StateAbbv = 'UT';
 
--------------------- END TASKS ----------------------
 -------------------- END TASKS ----------------------
 --This checkouts then checks in 3 books.
 BEGIN
@@ -984,4 +985,5 @@ BEGIN
 END
 
 
+-------------------- END TASKS ----------------------
 -------------------- END TASKS ----------------------
