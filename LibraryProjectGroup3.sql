@@ -874,4 +874,9 @@ EXEC LibraryProject.LoanAsset 6, 3, @Today3; --1 that works as expected...
 EXEC LibraryProject.LoanAsset 6, 6, @Today3; --1 that works as expected...
 EXEC LibraryProject.LoanAsset 6, 9, @Today3; --1 that works as expected...
 
+
+--Keyser Soze has moved to 4242 Not Here Way in Plain City, UT.
+--Use your stored procedure to update his address
+SELECT * FROM LibraryProject.Users
+EXEC LibraryProject.UpdateUser @UserKey = 6, @Address1 = '4242 Not Here Way', @City = 'Plain City', @StateAbbv = 'UT';
 -------------------- END TASKS ----------------------
