@@ -385,7 +385,18 @@ BEGIN
 
 	RETURN @CardTypeKey;
 END;
-
+--------
+CREATE OR ALTER PROCEDURE LibraryProject.DeactivateCards
+@UserKey INT
+as
+BEGIN
+UPDATE LibraryProject.Cards
+   SET 
+      DeactivatedOn = GETDATE()
+   WHERE
+     UserKey = @UserKey
+   AND DeactivatedOn IS NULL;
+END
 -------- 
 CREATE OR ALTER PROCEDURE LibraryProject.IssueCard
 	@UserKey INT,
@@ -423,13 +434,7 @@ BEGIN
 			AND
 			DeactivatedOn IS NULL
 		) > 0 -- any previously owned cards that aren't deactivated?
-			BEGIN
-				UPDATE LibraryProject.Cards
-				  SET 
-					  DeactivatedOn = GETDATE()
-				WHERE UserKey = @UserKey
-					  AND DeactivatedOn IS NULL;
-			END;
+			exec LibraryProject.DeactivateCards @UserKey
 		insert into LibraryProject.Cards 
 			(CardNumber
 			,UserKey
@@ -443,9 +448,6 @@ BEGIN
 	END
 END --issueCard
 --
-
--- CREATE OR ALTER PROCEDURE LibraryProject.DeactivateCard
-
 ------------------END STORED PROCEDURES------------------
 
 
@@ -850,7 +852,7 @@ AS (
 
 --Create a new asset type
 Exec LibraryProject.NewAssetType 'Audio';
--- Tyler Durden has lost the book �Mistborn�.  
+-- Tyler Durden has lost the book ï¿½Mistbornï¿½.  
 -- His library card was in the book (used as a bookmark).  
 -- Report the book lost, 
 exec LibraryProject.ReportAssetLost 2 -- Internal knowledge, 2 = Mistborn
@@ -885,7 +887,7 @@ BEGIN
 -- Also, try to check out a book to someone who has a fee, Tyler
 	EXEC LibraryProject.LoanAsset 5, 9, @Today;
 END
--- Tyler Durden has lost the book �Mistborn�.  ----------------------------
+-- Tyler Durden has lost the book Mistborn.  ----------------------------
 -- His library card was in the book (used as a bookmark).  
 -- Report the book lost, 
 exec LibraryProject.ReportAssetLost 2 -- Internal knowledge, 2 = Mistborn
@@ -906,7 +908,7 @@ EXEC LibraryProject.LoanAsset 4, 18, @Today2; --1 item checked out...
 EXEC LibraryProject.LoanAsset 4, 16, @Today2; --2 items checked out...
 EXEC LibraryProject.LoanAsset 4, 10, @Today2; --3 items checked out, should fail...
 
---Two or three that work as expected�
+--Two or three that work as expected
 DECLARE @Today3 DATE = GETDATE();
 EXEC LibraryProject.LoanAsset 6, 3, @Today3; --1 that works as expected...
 EXEC LibraryProject.LoanAsset 6, 6, @Today3; --1 that works as expected...
